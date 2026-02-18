@@ -20,7 +20,6 @@ const InventoryView = (() => {
     const badges = [];
     if (item.is_expired) badges.push('<span class="badge badge-danger">Expired</span>');
     else if (item.is_expiring_soon) badges.push('<span class="badge badge-warning">Expiring Soon</span>');
-    if (item.is_low && !item.is_expired) badges.push('<span class="badge badge-info">Low Stock</span>');
     return badges.join('');
   }
 
@@ -110,7 +109,6 @@ const InventoryView = (() => {
     const aggBadges = [];
     if (anyExpired) aggBadges.push('<span class="badge badge-danger">Expired</span>');
     else if (anyExpiring) aggBadges.push('<span class="badge badge-warning">Expiring Soon</span>');
-    if (anyLow && !anyExpired) aggBadges.push('<span class="badge badge-info">Low Stock</span>');
 
     return `
       <div class="item-card item-card-grouped ${statusClass}">
