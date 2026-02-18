@@ -41,11 +41,33 @@ def _instructions_list(scraper) -> list:
         return []
 
 
+_BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br",
+    "DNT": "1",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+}
+
+
+def _browser_session() -> requests.Session:
+    s = requests.Session()
+    s.headers.update(_BROWSER_HEADERS)
+    return s
+
+
 def scrape_recipe_url(url: str) -> dict:
     """Try recipe-scrapers first; fall back to Claude Haiku if needed."""
+    session = _browser_session()
     # 1. Try recipe-scrapers with wild_mode=True (handles 300+ sites + Schema.org fallback)
     try:
-        scraper = scrape_me(url, wild_mode=True)
+        scraper = scrape_me(url, wild_mode=True, requests_session=session)
         if _quality_ok(scraper):
             try:
                 image = scraper.image()
@@ -80,15 +102,14 @@ def scrape_recipe_url(url: str) -> dict:
             "Add ANTHROPIC_API_KEY to enable AI fallback."
         )
 
-    return _claude_scrape(url)
+    return _claude_scrape(url, session)
 
 
-def _claude_scrape(url: str) -> dict:
+def _claude_scrape(url: str, session: requests.Session) -> dict:
     import anthropic
 
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; Kitchenventory/1.0)"}
     try:
-        resp = requests.get(url, headers=headers, timeout=15)
+        resp = session.get(url, timeout=15)
         resp.raise_for_status()
     except Exception as e:
         raise ValueError(f"Could not fetch URL: {e}")
