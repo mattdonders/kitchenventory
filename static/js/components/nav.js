@@ -13,7 +13,7 @@ const Nav = (() => {
     const nav = document.getElementById('bottom-nav');
     nav.innerHTML = TABS.map(tab => `
       <button
-        class="nav-tab ${tab.id === activeTab ? 'active' : ''}"
+        class="nav-tab ${activeTab && tab.id === activeTab ? 'active' : ''}"
         data-tab="${tab.id}"
         aria-label="${tab.label}"
       >

@@ -920,6 +920,81 @@ a {
   justify-content: flex-end;
 }
 
+/* ===== Settings View ===== */
+.settings-view {
+  max-width: 600px;
+}
+
+.settings-section {
+  margin-bottom: 28px;
+}
+
+.settings-app-info {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.settings-app-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.settings-app-version {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.changelog-entry {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.changelog-entry-latest {
+  border-color: var(--color-primary-light);
+}
+
+.changelog-version-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.changelog-version {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.changelog-date {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.changelog-list {
+  list-style: disc;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.changelog-list li {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
 /* ===== Autocomplete ===== */
 .autocomplete-wrap {
   position: relative;
