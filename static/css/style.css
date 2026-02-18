@@ -175,8 +175,10 @@ a {
 }
 
 .nav-tab .nav-icon {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   line-height: 1;
+  width: 1.4rem;
+  text-align: center;
 }
 
 .nav-tab.active {

@@ -3,10 +3,10 @@
  */
 const Nav = (() => {
   const TABS = [
-    { id: 'inventory', icon: '🏠', label: 'Inventory' },
-    { id: 'add',       icon: '➕', label: 'Add Item' },
-    { id: 'shopping',  icon: '🛒', label: 'Shopping' },
-    { id: 'recipes',   icon: '🍳', label: 'Recipes' },
+    { id: 'inventory', icon: 'fa-solid fa-boxes-stacked', label: 'Inventory' },
+    { id: 'add',       icon: 'fa-solid fa-circle-plus',   label: 'Add Item' },
+    { id: 'shopping',  icon: 'fa-solid fa-cart-shopping', label: 'Shopping' },
+    { id: 'recipes',   icon: 'fa-solid fa-utensils',      label: 'Recipes' },
   ];
 
   function render(activeTab) {
@@ -17,7 +17,7 @@ const Nav = (() => {
         data-tab="${tab.id}"
         aria-label="${tab.label}"
       >
-        <span class="nav-icon">${tab.icon}</span>
+        <span class="nav-icon"><i class="${tab.icon}"></i></span>
         <span>${tab.label}</span>
       </button>
     `).join('');
