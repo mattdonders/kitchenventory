@@ -33,7 +33,7 @@ const ImportListView = (() => {
 
         <div style="margin-top: 16px;">
           <button class="btn btn-primary btn-lg" id="parse-btn">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Parse with AI
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Parse List
           </button>
         </div>
       </div>
@@ -129,7 +129,7 @@ const ImportListView = (() => {
       } catch (err) {
         Toast.show('Parse failed: ' + err.message, 'error');
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Parse with AI';
+        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Parse List';
       }
     });
   }
