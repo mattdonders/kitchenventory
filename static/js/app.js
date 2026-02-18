@@ -39,12 +39,12 @@ const App = (() => {
   function renderHeaderActions(viewId) {
     const el = document.getElementById('header-actions');
     if (viewId === 'settings') {
-      el.innerHTML = `<button id="header-back" title="Back" aria-label="Back">← Back</button>`;
+      el.innerHTML = `<button id="header-back" title="Back" aria-label="Back"><i class="fa-solid fa-arrow-left"></i> Back</button>`;
       el.querySelector('#header-back').addEventListener('click', () => {
         navigate(_previousView || 'inventory');
       });
     } else {
-      el.innerHTML = `<button id="header-settings" title="Settings" aria-label="Settings">⚙️</button>`;
+      el.innerHTML = `<button id="header-settings" title="Settings" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>`;
       el.querySelector('#header-settings').addEventListener('click', () => {
         navigate('settings');
       });
@@ -62,8 +62,9 @@ const App = (() => {
     // Update page title
     document.getElementById('page-title').textContent = view.title;
 
-    // Update nav (settings is not a tab, so pass null to clear active state when on settings)
+    // Update nav
     Nav.render(viewId === 'settings' ? null : viewId);
+    document.getElementById('bottom-nav').classList.toggle('nav-on-settings', viewId === 'settings');
 
     // Update header button
     renderHeaderActions(viewId);
