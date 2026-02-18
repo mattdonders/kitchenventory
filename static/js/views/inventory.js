@@ -295,7 +295,7 @@ const InventoryView = (() => {
   function renderEmptyState(grid) {
     grid.innerHTML = `
       <div class="empty-state" style="grid-column: 1/-1">
-        <div class="empty-icon">📦</div>
+        <div class="empty-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
         <h3>No items found</h3>
         <p>Add items to your inventory using the Add tab.</p>
       </div>
