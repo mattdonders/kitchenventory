@@ -143,23 +143,22 @@ const RecipesView = (() => {
 
     // Delete
     grid.querySelectorAll('[data-action="delete"]').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = parseInt(btn.dataset.id);
         const recipe = _savedRecipes.find(r => r.id === id);
-        Modal.confirm(
+        const confirmed = await Modal.confirm(
           'Delete Recipe',
-          `Delete "${recipe ? escapeHtml(recipe.title) : 'this recipe'}"? This cannot be undone.`,
-          async () => {
-            try {
-              await API.recipes.deleteSaved(id);
-              _savedRecipes = _savedRecipes.filter(r => r.id !== id);
-              renderSavedGrid();
-              Toast.show('Recipe deleted', 'success');
-            } catch (err) {
-              Toast.show('Error: ' + err.message, 'error');
-            }
-          }
+          `Delete "${recipe ? escapeHtml(recipe.title) : 'this recipe'}"? This cannot be undone.`
         );
+        if (!confirmed) return;
+        try {
+          await API.recipes.deleteSaved(id);
+          _savedRecipes = _savedRecipes.filter(r => r.id !== id);
+          renderSavedGrid();
+          Toast.show('Recipe deleted', 'success');
+        } catch (err) {
+          Toast.show('Error: ' + err.message, 'error');
+        }
       });
     });
 
