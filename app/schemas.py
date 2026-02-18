@@ -152,6 +152,11 @@ class ParseUrlRequest(BaseModel):
     url: str
 
 
+class ParseHtmlRequest(BaseModel):
+    html: str
+    url: Optional[str] = None  # original URL for context (optional)
+
+
 class ParsedRecipe(BaseModel):
     title: str
     url: Optional[str] = None

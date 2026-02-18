@@ -61,6 +61,42 @@ def _browser_session() -> requests.Session:
     return s
 
 
+def parse_recipe_html(html: str, url: str = "") -> dict:
+    """Parse a recipe from raw HTML (user-supplied via paste or file upload)."""
+    from recipe_scrapers import scrape_html
+    try:
+        scraper = scrape_html(html, org_url=url or "https://unknown.example.com")
+    except Exception as e:
+        raise ValueError(f"Could not parse recipe from HTML: {e}")
+
+    if not _quality_ok(scraper):
+        raise ValueError("No recognizable recipe found in the HTML. Make sure you copied the full page source.")
+
+    try:
+        image = scraper.image()
+    except Exception:
+        image = None
+    try:
+        total_time_raw = scraper.total_time()
+    except Exception:
+        total_time_raw = None
+    try:
+        yields = str(scraper.yields()) if scraper.yields() else None
+    except Exception:
+        yields = None
+
+    return {
+        "title": scraper.title().strip(),
+        "url": url or None,
+        "image_url": image,
+        "total_time": _format_time(total_time_raw),
+        "yields": yields,
+        "ingredients": scraper.ingredients() or [],
+        "instructions": _instructions_list(scraper),
+        "source": "url",
+    }
+
+
 def scrape_recipe_url(url: str) -> dict:
     """Try recipe-scrapers first; fall back to Claude Haiku if needed.
 

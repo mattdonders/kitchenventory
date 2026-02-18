@@ -380,14 +380,57 @@ const RecipesView = (() => {
 
     container.innerHTML = `
       <div class="recipes-view">
-        <!-- URL import bar -->
+        <!-- Import bar (URL / Paste HTML / Upload file) -->
         <div class="recipe-url-bar card">
-          <div class="recipe-url-input-row">
+          <div class="recipe-import-modes">
+            <button class="recipe-import-mode-btn active" data-mode="url">
+              <i class="fa-solid fa-link"></i> URL
+            </button>
+            <button class="recipe-import-mode-btn" data-mode="paste">
+              <i class="fa-solid fa-code"></i> Paste HTML
+            </button>
+            <button class="recipe-import-mode-btn" data-mode="file">
+              <i class="fa-solid fa-file-code"></i> Upload HTML
+            </button>
+          </div>
+
+          <div id="import-mode-url" class="recipe-url-input-row">
             <input class="form-input" id="url-input" type="url"
-              placeholder="Paste a recipe URL to import (AllRecipes, food blogs, etc.)" />
+              placeholder="Paste a recipe URL (AllRecipes, food blogs, etc.)" />
             <button class="btn btn-primary" id="parse-url-btn">
               <i class="fa-solid fa-download"></i> Import
             </button>
+          </div>
+
+          <div id="import-mode-paste" class="hidden">
+            <p class="recipe-import-hint">
+              Open the recipe page in your browser, then: <strong>Cmd+A</strong> &rarr; <strong>Cmd+C</strong> to copy all, or right-click &rarr; View Page Source &rarr; Cmd+A &rarr; Cmd+C.
+            </p>
+            <textarea class="form-input import-textarea" id="html-paste-input"
+              rows="5" placeholder="Paste the full page HTML here&hellip;"></textarea>
+            <div class="recipe-url-input-row" style="margin-top:8px">
+              <input class="form-input" id="html-paste-url" type="url"
+                placeholder="Original URL (optional, for reference)" />
+              <button class="btn btn-primary" id="parse-html-btn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Parse
+              </button>
+            </div>
+          </div>
+
+          <div id="import-mode-file" class="hidden">
+            <p class="recipe-import-hint">
+              In your browser: <strong>File &rarr; Save Page As&hellip;</strong> (save as <em>Webpage, HTML Only</em>), then upload the .html file here.
+            </p>
+            <div class="recipe-file-upload-row">
+              <label class="recipe-file-label" for="html-file-input">
+                <i class="fa-solid fa-file-arrow-up"></i>
+                <span id="file-label-text">Choose .html file</span>
+              </label>
+              <input type="file" id="html-file-input" accept=".html,.htm" style="display:none" />
+              <button class="btn btn-primary" id="parse-file-btn" disabled>
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Parse
+              </button>
+            </div>
           </div>
         </div>
         <div id="url-parse-preview" class="hidden"></div>
@@ -451,17 +494,26 @@ const RecipesView = (() => {
       });
     });
 
-    // URL parse
+    // Import mode switcher (URL / Paste HTML / Upload)
+    _container.querySelectorAll('.recipe-import-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _container.querySelectorAll('.recipe-import-mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        ['url', 'paste', 'file'].forEach(m => {
+          _container.querySelector(`#import-mode-${m}`).classList.toggle('hidden', m !== btn.dataset.mode);
+        });
+      });
+    });
+
+    // --- URL mode ---
     const parseBtn = _container.querySelector('#parse-url-btn');
     const urlInput = _container.querySelector('#url-input');
 
     parseBtn.addEventListener('click', async () => {
       const url = urlInput.value.trim();
       if (!url) { Toast.show('Please enter a URL', 'warning'); return; }
-
       parseBtn.disabled = true;
       parseBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Parsing&hellip;';
-
       try {
         const parsed = await API.recipes.parseUrl(url);
         showParsePreview(parsed);
@@ -475,6 +527,57 @@ const RecipesView = (() => {
 
     urlInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') parseBtn.click();
+    });
+
+    // --- Paste HTML mode ---
+    const parseHtmlBtn = _container.querySelector('#parse-html-btn');
+    parseHtmlBtn.addEventListener('click', async () => {
+      const html = _container.querySelector('#html-paste-input').value.trim();
+      const url = _container.querySelector('#html-paste-url').value.trim();
+      if (!html) { Toast.show('Please paste the page HTML', 'warning'); return; }
+      parseHtmlBtn.disabled = true;
+      parseHtmlBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Parsing&hellip;';
+      try {
+        const parsed = await API.recipes.parseHtml(html, url);
+        showParsePreview(parsed);
+      } catch (err) {
+        Toast.show('Could not parse recipe: ' + err.message, 'error');
+      } finally {
+        parseHtmlBtn.disabled = false;
+        parseHtmlBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Parse';
+      }
+    });
+
+    // --- Upload HTML file mode ---
+    const fileInput = _container.querySelector('#html-file-input');
+    const fileLabel = _container.querySelector('#file-label-text');
+    const parseFileBtn = _container.querySelector('#parse-file-btn');
+
+    _container.querySelector('.recipe-file-label').addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) {
+        fileLabel.textContent = file.name;
+        parseFileBtn.disabled = false;
+      }
+    });
+
+    parseFileBtn.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      parseFileBtn.disabled = true;
+      parseFileBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Parsing&hellip;';
+      try {
+        const html = await file.text();
+        const parsed = await API.recipes.parseHtml(html);
+        showParsePreview(parsed);
+      } catch (err) {
+        Toast.show('Could not parse recipe: ' + err.message, 'error');
+      } finally {
+        parseFileBtn.disabled = false;
+        parseFileBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Parse';
+      }
     });
 
     // AI suggestions

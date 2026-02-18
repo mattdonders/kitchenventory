@@ -6,11 +6,11 @@ import json
 from ..database import get_db
 from ..models import Item, SavedRecipe, RecipeTag
 from ..schemas import (
-    RecipeRequest, ParseUrlRequest, ParsedRecipe,
+    RecipeRequest, ParseUrlRequest, ParseHtmlRequest, ParsedRecipe,
     SavedRecipeCreate, SavedRecipeUpdate, SavedRecipeOut, RecipeTagOut
 )
 from ..services.recipe_service import get_recipe_suggestions
-from ..services.scrape_service import scrape_recipe_url
+from ..services.scrape_service import scrape_recipe_url, parse_recipe_html
 
 router = APIRouter()
 
@@ -31,6 +31,17 @@ def suggest_recipes(request: RecipeRequest, db: Session = Depends(get_db)):
 def parse_url(request: ParseUrlRequest):
     try:
         result = scrape_recipe_url(request.url)
+        return ParsedRecipe(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse recipe: {e}")
+
+
+@router.post("/recipes/parse-html", response_model=ParsedRecipe)
+def parse_html(request: ParseHtmlRequest):
+    try:
+        result = parse_recipe_html(request.html, request.url or "")
         return ParsedRecipe(**result)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))

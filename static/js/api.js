@@ -65,6 +65,7 @@ const API = (() => {
   const recipes = {
     suggest: (dietary_notes = '') => request('POST', '/recipes/suggest', { dietary_notes }),
     parseUrl: (url) => request('POST', '/recipes/parse-url', { url }),
+    parseHtml: (html, url = '') => request('POST', '/recipes/parse-html', { html, url }),
     listTags: () => request('GET', '/recipes/tags'),
     listSaved: (params = {}) => {
       const qs = new URLSearchParams(
