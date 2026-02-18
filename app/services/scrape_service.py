@@ -1,4 +1,5 @@
 import json
+import re
 import requests
 from bs4 import BeautifulSoup
 
@@ -27,24 +28,39 @@ def _quality_ok(scraper) -> bool:
         return False
 
 
-def _instructions_list(scraper) -> list:
-    import re
-    _NOISE = re.compile(r'^(step\s+\d+\.?|recipe\s+notes?\.?)$', re.IGNORECASE)
+_INSTRUCTION_NOISE = re.compile(r'^(step\s+\d+\.?|recipe\s+notes?\.?)$', re.IGNORECASE)
 
-    def _keep(s):
-        s = s.strip()
-        return bool(s) and not _NOISE.match(s)
 
+def _build_result(scraper, url: str) -> dict:
+    """Build a result dict from a recipe-scrapers scraper object."""
     try:
-        raw = scraper.instructions()
-        if not raw:
-            return []
-        if isinstance(raw, list):
-            return [s.strip() for s in raw if _keep(s)]
-        # recipe-scrapers returns \n-delimited string, NOT a list
-        return [s.strip() for s in raw.split("\n") if _keep(s)]
+        image = scraper.image()
     except Exception:
-        return []
+        image = None
+    try:
+        total_time_raw = scraper.total_time()
+    except Exception:
+        total_time_raw = None
+    try:
+        yields = str(scraper.yields()) if scraper.yields() else None
+    except Exception:
+        yields = None
+    try:
+        raw_instructions = scraper.instructions_list() or []
+        instructions = [s for s in raw_instructions if s.strip() and not _INSTRUCTION_NOISE.match(s.strip())]
+    except Exception:
+        instructions = []
+
+    return {
+        "title": scraper.title().strip(),
+        "url": url,
+        "image_url": image,
+        "total_time": _format_time(total_time_raw),
+        "yields": yields,
+        "ingredients": scraper.ingredients() or [],
+        "instructions": instructions,
+        "source": "url",
+    }
 
 
 _BROWSER_HEADERS = {
@@ -68,59 +84,27 @@ def _browser_session() -> requests.Session:
     return s
 
 
-def _extract_url_from_html(html: str) -> str:
-    """Pull the canonical URL out of the page's own meta tags."""
-    soup = BeautifulSoup(html, "html.parser")
-    tag = soup.find("link", rel="canonical")
-    if tag and tag.get("href"):
-        return tag["href"]
-    tag = soup.find("meta", property="og:url")
-    if tag and tag.get("content"):
-        return tag["content"]
-    return ""
-
-
 def parse_recipe_html(html: str, url: str = "") -> dict:
     """Parse a recipe from raw HTML (user-supplied via paste or file upload).
 
-    If no URL is provided, the canonical URL is extracted from the HTML so
+    If no URL is provided, the canonical URL is read from the scraped page so
     recipe-scrapers can select the right site-specific parser. Falls back to
     wild_mode (Schema.org) for unrecognized sites.
     """
-    org_url = url or _extract_url_from_html(html) or "https://unknown.example.com"
-
     from recipe_scrapers import scrape_html
     try:
-        scraper = scrape_html(html, org_url=org_url, wild_mode=True)
+        scraper = scrape_html(html, org_url=url or "https://unknown.example.com", wild_mode=True)
     except Exception as e:
         raise ValueError(f"Could not parse recipe from HTML: {e}")
 
     if not _quality_ok(scraper):
         raise ValueError("No recognizable recipe found in the HTML. Make sure you copied the full page source.")
 
-    try:
-        image = scraper.image()
-    except Exception:
-        image = None
-    try:
-        total_time_raw = scraper.total_time()
-    except Exception:
-        total_time_raw = None
-    try:
-        yields = str(scraper.yields()) if scraper.yields() else None
-    except Exception:
-        yields = None
+    # Prefer the URL the page declares over our placeholder
+    canonical = scraper.canonical_url() or ""
+    resolved_url = url or (canonical if canonical != "https://unknown.example.com" else None)
 
-    return {
-        "title": scraper.title().strip(),
-        "url": url or (org_url if org_url != "https://unknown.example.com" else None),
-        "image_url": image,
-        "total_time": _format_time(total_time_raw),
-        "yields": yields,
-        "ingredients": scraper.ingredients() or [],
-        "instructions": _instructions_list(scraper),
-        "source": "url",
-    }
+    return _build_result(scraper, resolved_url)
 
 
 def scrape_recipe_url(url: str) -> dict:
@@ -132,7 +116,6 @@ def scrape_recipe_url(url: str) -> dict:
     """
     session = _browser_session()
 
-    # Fetch once — reuse HTML for both scraper and Claude fallback
     try:
         resp = session.get(url, timeout=15)
     except Exception as e:
@@ -154,29 +137,7 @@ def scrape_recipe_url(url: str) -> dict:
         from recipe_scrapers import scrape_html
         scraper = scrape_html(html, org_url=url)
         if _quality_ok(scraper):
-            try:
-                image = scraper.image()
-            except Exception:
-                image = None
-            try:
-                total_time_raw = scraper.total_time()
-            except Exception:
-                total_time_raw = None
-            try:
-                yields = str(scraper.yields()) if scraper.yields() else None
-            except Exception:
-                yields = None
-
-            return {
-                "title": scraper.title().strip(),
-                "url": url,
-                "image_url": image,
-                "total_time": _format_time(total_time_raw),
-                "yields": yields,
-                "ingredients": scraper.ingredients() or [],
-                "instructions": _instructions_list(scraper),
-                "source": "url",
-            }
+            return _build_result(scraper, url)
     except Exception:
         pass
 
