@@ -5,7 +5,8 @@ from datetime import date, timedelta
 
 from ..database import get_db
 from ..models import Item
-from ..schemas import ItemCreate, ItemUpdate, ItemOut, QuantityAdjust, ItemBulkCreate
+from ..schemas import ItemCreate, ItemUpdate, ItemOut, QuantityAdjust, ItemBulkCreate, ParseListRequest, ParsedItem
+from ..services.import_service import parse_item_list
 
 router = APIRouter()
 
@@ -46,6 +47,16 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_item)
     return db_item
+
+
+@router.post("/items/parse-list", response_model=List[ParsedItem])
+def parse_list(req: ParseListRequest):
+    if not req.text.strip():
+        raise HTTPException(status_code=400, detail="Text is required")
+    try:
+        return parse_item_list(req.text)
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
 
 @router.post("/items/bulk", response_model=List[ItemOut], status_code=201)

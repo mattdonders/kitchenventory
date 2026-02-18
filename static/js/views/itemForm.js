@@ -38,9 +38,14 @@ const ItemFormView = (() => {
 
   function buildModeToggle() {
     return `
-      <div class="mode-toggle">
-        <button type="button" class="mode-btn ${_mode === 'standard' ? 'active' : ''}" data-mode="standard">Standard</button>
-        <button type="button" class="mode-btn ${_mode === 'quickadd' ? 'active' : ''}" data-mode="quickadd">Quick Add</button>
+      <div class="mode-toggle-row">
+        <div class="mode-toggle">
+          <button type="button" class="mode-btn ${_mode === 'standard' ? 'active' : ''}" data-mode="standard">Standard</button>
+          <button type="button" class="mode-btn ${_mode === 'quickadd' ? 'active' : ''}" data-mode="quickadd">Quick Add</button>
+        </div>
+        <button type="button" class="btn-link import-link" id="go-import">
+          <i class="fa-solid fa-list-check"></i> Import from list
+        </button>
       </div>
     `;
   }
@@ -319,6 +324,10 @@ const ItemFormView = (() => {
   function bindEvents(container) {
     _container = container;
     const form = container.querySelector('#item-form');
+
+    // Import link
+    const importLink = container.querySelector('#go-import');
+    if (importLink) importLink.addEventListener('click', () => App.navigate('import'));
 
     // Mode toggle
     container.querySelectorAll('.mode-btn').forEach(btn => {

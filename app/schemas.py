@@ -72,6 +72,17 @@ class QuantityAdjust(BaseModel):
     delta: float
 
 
+class ParseListRequest(BaseModel):
+    text: str
+
+
+class ParsedItem(BaseModel):
+    name: str
+    quantity: float = 1.0
+    unit: str = ""
+    category: str = ""
+
+
 class ItemBulkCreate(BaseModel):
     items: List[ItemCreate]
 

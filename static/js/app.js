@@ -30,6 +30,10 @@ const App = (() => {
       title: 'Settings',
       render: (container) => SettingsView.render(container),
     },
+    import: {
+      title: 'Import List',
+      render: (container) => ImportListView.render(container),
+    },
   };
 
   let _currentView = null;
@@ -38,7 +42,7 @@ const App = (() => {
 
   function renderHeaderActions(viewId) {
     const el = document.getElementById('header-actions');
-    if (viewId === 'settings') {
+    if (viewId === 'settings' || viewId === 'import') {
       el.innerHTML = `<button id="header-back" title="Back" aria-label="Back"><i class="fa-solid fa-arrow-left"></i> Back</button>`;
       el.querySelector('#header-back').addEventListener('click', () => {
         navigate(_previousView || 'inventory');
@@ -63,8 +67,9 @@ const App = (() => {
     document.getElementById('page-title').textContent = view.title;
 
     // Update nav
-    Nav.render(viewId === 'settings' ? null : viewId);
-    document.getElementById('bottom-nav').classList.toggle('nav-on-settings', viewId === 'settings');
+    const isUtility = viewId === 'settings' || viewId === 'import';
+    Nav.render(isUtility ? null : viewId);
+    document.getElementById('bottom-nav').classList.toggle('nav-on-settings', isUtility);
 
     // Update header button
     renderHeaderActions(viewId);
