@@ -73,9 +73,17 @@ def scrape_recipe_url(url: str) -> dict:
     # Fetch once — reuse HTML for both scraper and Claude fallback
     try:
         resp = session.get(url, timeout=15)
-        resp.raise_for_status()
     except Exception as e:
-        raise ValueError(f"Could not fetch URL: {e}")
+        raise ValueError(f"Could not reach that URL: {e}")
+
+    if resp.status_code == 403:
+        from urllib.parse import urlparse
+        host = urlparse(url).hostname or url
+        raise ValueError(
+            f"{host} blocks automated access (bot protection). "
+            "Try a different recipe site, or use AI Suggestions to generate a recipe."
+        )
+    resp.raise_for_status()
 
     html = resp.text
 
