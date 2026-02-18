@@ -18,7 +18,8 @@ Available categories: {", ".join(CATEGORIES)}
 Rules:
 - name: capitalize properly (e.g. "Whole Milk", "Greek Yogurt")
 - quantity: number, default 1 if not specified
-- unit: common unit string (e.g. "gallons", "oz", "lbs", "cans", "boxes", "bags", "jars", "bottles", "dozen") — empty string if none makes sense
+- unit: common unit string (e.g. "gallons", "oz", "lbs", "cans", "boxes", "bags", "jars", "bottles", "dozen", "packs", "pkgs", "bags", "rolls", "loaves", "heads", "bunches") — empty string if none makes sense
+- For packaged goods (chicken, frozen veg, deli meat, etc.) where weight is not specified, use "packs", "pkgs", or "bags" — do NOT assume a weight unit
 - category: pick the best match from the available categories
 
 Examples:
