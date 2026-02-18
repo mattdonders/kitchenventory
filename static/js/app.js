@@ -26,6 +26,10 @@ const App = (() => {
       title: 'Recipes',
       render: (container, s) => RecipesView.render(container, s),
     },
+    mealplan: {
+      title: 'Meal Planner',
+      render: (container) => MealPlanView.render(container),
+    },
     settings: {
       title: 'Settings',
       render: (container) => SettingsView.render(container),

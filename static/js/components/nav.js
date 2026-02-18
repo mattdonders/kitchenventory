@@ -4,9 +4,10 @@
 const Nav = (() => {
   const TABS = [
     { id: 'inventory', icon: 'fa-solid fa-boxes-stacked', label: 'Inventory' },
-    { id: 'add',       icon: 'fa-solid fa-circle-plus',   label: 'Add Item' },
+    { id: 'add',       icon: 'fa-solid fa-circle-plus',   label: 'Add' },
     { id: 'shopping',  icon: 'fa-solid fa-cart-shopping', label: 'Shopping' },
     { id: 'recipes',   icon: 'fa-solid fa-utensils',      label: 'Recipes' },
+    { id: 'mealplan',  icon: 'fa-solid fa-calendar-week', label: 'Meals' },
   ];
 
   function render(activeTab) {

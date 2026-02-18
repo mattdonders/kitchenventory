@@ -66,5 +66,16 @@ const API = (() => {
     suggest: (dietary_notes = '') => request('POST', '/recipes/suggest', { dietary_notes }),
   };
 
-  return { items, categories, locations, shopping, recipes };
+  // Meal Plan
+  const mealplan = {
+    list: (week = null) => {
+      const qs = week ? `?week=${week}` : '';
+      return request('GET', `/mealplan${qs}`);
+    },
+    create: (data) => request('POST', '/mealplan', data),
+    update: (id, data) => request('PUT', `/mealplan/${id}`, data),
+    delete: (id) => request('DELETE', `/mealplan/${id}`),
+  };
+
+  return { items, categories, locations, shopping, recipes, mealplan };
 })();

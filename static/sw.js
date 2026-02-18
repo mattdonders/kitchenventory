@@ -1,4 +1,4 @@
-const CACHE = 'kitchenventory-v1.3.0';
+const CACHE = 'kitchenventory-v1.4.0';
 const PRECACHE = [
   '/',
   '/css/style.css',
@@ -13,6 +13,7 @@ const PRECACHE = [
   '/js/views/recipes.js',
   '/js/views/settings.js',
   '/js/views/importList.js',
+  '/js/views/mealplan.js',
   '/icons/icon.svg',
 ];
 

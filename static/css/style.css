@@ -1532,3 +1532,345 @@ a {
     flex-wrap: nowrap;
   }
 }
+
+/* ===== Meal Plan View ===== */
+.mealplan-view {
+  padding: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Week navigator */
+.mealplan-week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mealplan-week-label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text);
+  text-align: center;
+  flex: 1;
+}
+
+.mealplan-nav-btn {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.mealplan-nav-btn:hover {
+  background: var(--color-surface-alt);
+}
+
+.mealplan-today-btn {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.mealplan-today-btn:hover {
+  opacity: 0.88;
+}
+
+/* Week grid */
+.mealplan-week-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+/* Day card */
+.mealplan-day-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: box-shadow 0.15s;
+}
+
+.mealplan-day-card.is-today {
+  border-left: 4px solid var(--color-primary);
+}
+
+.mealplan-day-card.is-empty {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+}
+
+.mealplan-day-card.is-empty:hover {
+  background: var(--color-surface);
+}
+
+.mealplan-day-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.mealplan-day-name {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-width: 36px;
+}
+
+.mealplan-day-date {
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+}
+
+.mealplan-day-card.is-today .mealplan-day-name {
+  color: var(--color-primary);
+}
+
+/* Filled day content */
+.mealplan-meal-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+.mealplan-meal-notes {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.mealplan-day-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.mealplan-btn-edit,
+.mealplan-btn-clear {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mealplan-btn-edit:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.mealplan-btn-clear:hover {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+/* Empty day add button */
+.mealplan-btn-add {
+  font-size: 0.875rem;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  width: 100%;
+  text-align: left;
+}
+
+.mealplan-btn-add:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Inline edit form */
+.mealplan-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mealplan-edit-form input,
+.mealplan-edit-form textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.mealplan-edit-form input:focus,
+.mealplan-edit-form textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.mealplan-edit-form textarea {
+  resize: vertical;
+  min-height: 48px;
+}
+
+.mealplan-edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mealplan-btn-save {
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.mealplan-btn-save:hover {
+  opacity: 0.88;
+}
+
+.mealplan-btn-cancel {
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mealplan-btn-cancel:hover {
+  background: var(--color-border);
+}
+
+/* Pantry snapshot section */
+.mealplan-pantry {
+  border-top: 1px solid var(--color-border);
+  padding-top: 20px;
+}
+
+.mealplan-pantry-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Alert rows */
+.mealplan-alert-section {
+  margin-bottom: 14px;
+}
+
+.mealplan-alert-header {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mealplan-alert-header.danger { color: var(--color-danger); }
+.mealplan-alert-header.warning { color: var(--color-warning); }
+.mealplan-alert-header.info { color: var(--color-info); }
+
+.mealplan-alert-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mealplan-pill {
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+/* By-category pantry listing */
+.mealplan-pantry-categories {
+  margin-top: 16px;
+}
+
+.mealplan-pantry-cat-header {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+
+.mealplan-pantry-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mealplan-pantry-item {
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.mealplan-pantry-item.is-low {
+  border-color: var(--color-info);
+  color: var(--color-info);
+}
+
+/* Tablet: 2-col grid */
+@media (min-width: 600px) {
+  .mealplan-week-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+
+/* Desktop: 7-col grid */
+@media (min-width: 1000px) {
+  .mealplan-week-grid {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}

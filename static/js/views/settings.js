@@ -2,10 +2,28 @@
  * Settings view — version info, dark mode toggle, changelog
  */
 const SettingsView = (() => {
-  const APP_VERSION = '1.2.0';
+  const APP_VERSION = '1.4.0';
   const LS_THEME = 'kv_theme';
 
   const CHANGELOG = [
+    {
+      version: '1.4.0',
+      date: '2026-02-18',
+      changes: [
+        'Meal Planner — weekly meal planning grid with pantry snapshot',
+        'Week navigation — browse past and future weeks, jump to today',
+        'Inline editing — tap any day to add or edit the meal for that day',
+        'Pantry snapshot — see expired, expiring soon, and low-stock items at a glance',
+      ],
+    },
+    {
+      version: '1.3.0',
+      date: '2026-02-18',
+      changes: [
+        'AI-powered list import — paste a freeform grocery list and let Claude parse it into structured items',
+        'Preview and edit parsed items before importing',
+      ],
+    },
     {
       version: '1.2.0',
       date: '2026-02-18',

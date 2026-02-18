@@ -123,3 +123,26 @@ class ShoppingItemOut(ShoppingItemBase):
 
 class RecipeRequest(BaseModel):
     dietary_notes: str = ""
+
+
+class MealPlanEntryBase(BaseModel):
+    meal_name: str
+    notes: str = ""
+
+
+class MealPlanEntryCreate(MealPlanEntryBase):
+    date: date  # YYYY-MM-DD
+
+
+class MealPlanEntryUpdate(BaseModel):
+    meal_name: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class MealPlanEntryOut(MealPlanEntryBase):
+    id: int
+    date: date
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}

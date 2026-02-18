@@ -56,3 +56,15 @@ class ShoppingListItem(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     item = relationship("Item")
+
+
+class MealPlanEntry(Base):
+    __tablename__ = "meal_plan_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, unique=True, nullable=False, index=True)
+    meal_name = Column(String, nullable=False)
+    notes = Column(String, default="")
+    recipe_id = Column(Integer, nullable=True)  # future-proofing, unused in Phase 1
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
