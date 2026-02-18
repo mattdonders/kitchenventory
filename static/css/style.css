@@ -104,6 +104,11 @@ a {
   transition: background 0.15s;
 }
 
+#header-settings .fa-gear {
+  font-size: 1.3rem;
+  vertical-align: middle;
+}
+
 .header-actions button:hover {
   background: rgba(255,255,255,0.15);
 }
