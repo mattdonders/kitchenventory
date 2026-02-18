@@ -12,3 +12,5 @@ env/
 dist/
 build/
 .pytest_cache/
+server.pid
+server.log
