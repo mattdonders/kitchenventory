@@ -24,7 +24,7 @@ const InventoryView = (() => {
     return badges.join('');
   }
 
-  // Single-item card (unchanged appearance)
+  // Single-item card — compact 2-column layout
   function renderItem(item) {
     const statusClass = item.is_expired ? 'is-expired'
       : item.is_expiring_soon ? 'is-expiring-soon'
@@ -32,31 +32,29 @@ const InventoryView = (() => {
       : '';
 
     const metaTags = [];
-    if (item.category) metaTags.push(`<span class="item-meta-tag">🏷 ${item.category.name}</span>`);
-    if (item.location) metaTags.push(`<span class="item-meta-tag">📍 ${item.location.name}</span>`);
+    if (item.category) metaTags.push(`<span class="item-meta-tag">🏷 ${escapeHtml(item.category.name)}</span>`);
+    if (item.location) metaTags.push(`<span class="item-meta-tag">📍 ${escapeHtml(item.location.name)}</span>`);
     if (item.expiration_date) metaTags.push(`<span class="item-meta-tag">📅 ${formatDate(item.expiration_date)}</span>`);
-    if (item.notes) metaTags.push(`<span class="item-meta-tag" title="${item.notes}">📝</span>`);
+    if (item.notes) metaTags.push(`<span class="item-meta-tag" title="${escapeHtml(item.notes)}">📝</span>`);
 
     return `
       <div class="item-card ${statusClass}" data-id="${item.id}">
         <div class="item-card-header">
           <div class="item-name">${escapeHtml(item.name)}</div>
-          <div class="item-badges">${renderBadges(item)}</div>
+          <div class="item-card-actions">
+            ${renderBadges(item)}
+            <button class="item-icon-btn" data-action="edit" data-id="${item.id}" title="Edit"><i class="fa-solid fa-pencil"></i></button>
+            <button class="item-icon-btn item-icon-btn-danger" data-action="delete" data-id="${item.id}" title="Delete"><i class="fa-solid fa-trash"></i></button>
+          </div>
         </div>
         ${metaTags.length ? `<div class="item-meta">${metaTags.join('')}</div>` : ''}
         <div class="item-quantity-row">
-          <div>
+          <button class="qty-btn" data-action="dec" data-id="${item.id}" title="Decrease">−</button>
+          <div class="qty-value">
             <span class="quantity-display">${item.quantity}</span>
             ${item.unit ? `<span class="quantity-unit">${escapeHtml(item.unit)}</span>` : ''}
           </div>
-          <div class="quantity-controls">
-            <button class="qty-btn" data-action="dec" data-id="${item.id}" title="Decrease">−</button>
-            <button class="qty-btn" data-action="inc" data-id="${item.id}" title="Increase">+</button>
-          </div>
-        </div>
-        <div class="item-actions">
-          <button class="btn btn-sm btn-secondary" data-action="edit" data-id="${item.id}">Edit</button>
-          <button class="btn btn-sm btn-danger" data-action="delete" data-id="${item.id}">Delete</button>
+          <button class="qty-btn" data-action="inc" data-id="${item.id}" title="Increase">+</button>
         </div>
       </div>
     `;

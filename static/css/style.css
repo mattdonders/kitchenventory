@@ -273,7 +273,7 @@ a {
 .items-grid {
   display: grid;
   gap: 8px;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
 }
 
 .item-card {
@@ -286,6 +286,7 @@ a {
   flex-direction: column;
   gap: 6px;
   transition: box-shadow 0.15s;
+  min-width: 0; /* prevent grid blowout */
 }
 
 .item-card:hover {
@@ -308,16 +309,53 @@ a {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
 }
 
 .item-name {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-text);
   flex: 1;
   min-width: 0;
-  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.item-icon-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.item-icon-btn:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.item-icon-btn-danger {
+  color: var(--color-danger);
+}
+
+.item-icon-btn-danger:hover {
+  background: #fdecea;
+  color: var(--color-danger);
 }
 
 .item-badges {
@@ -369,16 +407,29 @@ a {
   align-items: center;
   gap: 3px;
   background: var(--color-surface-alt);
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .item-quantity-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.qty-value {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  justify-content: center;
+  flex: 1;
 }
 
 .quantity-display {
@@ -1352,6 +1403,7 @@ a {
   flex-direction: column;
   gap: 6px;
   transition: box-shadow 0.15s;
+  grid-column: 1 / -1; /* always full width */
 }
 
 .item-card-grouped:hover {
