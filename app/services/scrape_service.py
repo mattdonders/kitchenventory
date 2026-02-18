@@ -61,11 +61,30 @@ def _browser_session() -> requests.Session:
     return s
 
 
+def _extract_url_from_html(html: str) -> str:
+    """Pull the canonical URL out of the page's own meta tags."""
+    soup = BeautifulSoup(html, "html.parser")
+    tag = soup.find("link", rel="canonical")
+    if tag and tag.get("href"):
+        return tag["href"]
+    tag = soup.find("meta", property="og:url")
+    if tag and tag.get("content"):
+        return tag["content"]
+    return ""
+
+
 def parse_recipe_html(html: str, url: str = "") -> dict:
-    """Parse a recipe from raw HTML (user-supplied via paste or file upload)."""
+    """Parse a recipe from raw HTML (user-supplied via paste or file upload).
+
+    If no URL is provided, the canonical URL is extracted from the HTML so
+    recipe-scrapers can select the right site-specific parser. Falls back to
+    wild_mode (Schema.org) for unrecognized sites.
+    """
+    org_url = url or _extract_url_from_html(html) or "https://unknown.example.com"
+
     from recipe_scrapers import scrape_html
     try:
-        scraper = scrape_html(html, org_url=url or "https://unknown.example.com")
+        scraper = scrape_html(html, org_url=org_url, wild_mode=True)
     except Exception as e:
         raise ValueError(f"Could not parse recipe from HTML: {e}")
 
@@ -87,7 +106,7 @@ def parse_recipe_html(html: str, url: str = "") -> dict:
 
     return {
         "title": scraper.title().strip(),
-        "url": url or None,
+        "url": url or (org_url if org_url != "https://unknown.example.com" else None),
         "image_url": image,
         "total_time": _format_time(total_time_raw),
         "yields": yields,

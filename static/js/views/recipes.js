@@ -431,6 +431,10 @@ const RecipesView = (() => {
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Parse
               </button>
             </div>
+            <div class="recipe-url-input-row" style="margin-top:8px">
+              <input class="form-input" id="html-file-url" type="url"
+                placeholder="Original URL (optional — auto-detected from file if blank)" />
+            </div>
           </div>
         </div>
         <div id="url-parse-preview" class="hidden"></div>
@@ -568,7 +572,8 @@ const RecipesView = (() => {
       parseFileBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Parsing&hellip;';
       try {
         const html = await file.text();
-        const parsed = await API.recipes.parseHtml(html);
+        const fileUrl = _container.querySelector('#html-file-url').value.trim();
+        const parsed = await API.recipes.parseHtml(html, fileUrl);
         showParsePreview(parsed);
       } catch (err) {
         Toast.show('Could not parse recipe: ' + err.message, 'error');
