@@ -553,8 +553,6 @@ const RecipesView = (() => {
     const fileLabel = _container.querySelector('#file-label-text');
     const parseFileBtn = _container.querySelector('#parse-file-btn');
 
-    _container.querySelector('.recipe-file-label').addEventListener('click', () => fileInput.click());
-
     fileInput.addEventListener('change', () => {
       const file = fileInput.files[0];
       if (file) {
