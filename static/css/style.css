@@ -358,6 +358,12 @@ a {
   color: var(--color-danger);
 }
 
+.item-status-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .item-badges {
   display: flex;
   flex-wrap: wrap;

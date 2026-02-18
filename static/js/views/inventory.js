@@ -37,16 +37,17 @@ const InventoryView = (() => {
     if (item.expiration_date) metaTags.push(`<span class="item-meta-tag">📅 ${formatDate(item.expiration_date)}</span>`);
     if (item.notes) metaTags.push(`<span class="item-meta-tag" title="${escapeHtml(item.notes)}">📝</span>`);
 
+    const badges = renderBadges(item);
     return `
       <div class="item-card ${statusClass}" data-id="${item.id}">
         <div class="item-card-header">
           <div class="item-name">${escapeHtml(item.name)}</div>
           <div class="item-card-actions">
-            ${renderBadges(item)}
             <button class="item-icon-btn" data-action="edit" data-id="${item.id}" title="Edit"><i class="fa-solid fa-pencil"></i></button>
             <button class="item-icon-btn item-icon-btn-danger" data-action="delete" data-id="${item.id}" title="Delete"><i class="fa-solid fa-trash"></i></button>
           </div>
         </div>
+        ${badges ? `<div class="item-status-badges">${badges}</div>` : ''}
         ${metaTags.length ? `<div class="item-meta">${metaTags.join('')}</div>` : ''}
         <div class="item-quantity-row">
           <button class="qty-btn" data-action="dec" data-id="${item.id}" title="Decrease">−</button>

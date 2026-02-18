@@ -1,4 +1,4 @@
-const CACHE = 'kitchenventory-v1.5.0';
+const CACHE = 'kitchenventory-v1.5.1';
 const PRECACHE = [
   '/',
   '/css/style.css',
