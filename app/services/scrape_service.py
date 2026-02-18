@@ -1,7 +1,6 @@
 import json
 import requests
 from bs4 import BeautifulSoup
-from recipe_scrapers import scrape_me
 
 from ..config import settings
 
@@ -63,11 +62,27 @@ def _browser_session() -> requests.Session:
 
 
 def scrape_recipe_url(url: str) -> dict:
-    """Try recipe-scrapers first; fall back to Claude Haiku if needed."""
+    """Try recipe-scrapers first; fall back to Claude Haiku if needed.
+
+    Fetches HTML once with browser-like headers (the library itself does not
+    bypass bot protection), then passes the raw HTML to scrape_html() per
+    the documented pattern.
+    """
     session = _browser_session()
-    # 1. Try recipe-scrapers with wild_mode=True (handles 300+ sites + Schema.org fallback)
+
+    # Fetch once — reuse HTML for both scraper and Claude fallback
     try:
-        scraper = scrape_me(url, wild_mode=True, requests_session=session)
+        resp = session.get(url, timeout=15)
+        resp.raise_for_status()
+    except Exception as e:
+        raise ValueError(f"Could not fetch URL: {e}")
+
+    html = resp.text
+
+    # 1. Try recipe-scrapers with our pre-fetched HTML
+    try:
+        from recipe_scrapers import scrape_html
+        scraper = scrape_html(html, org_url=url)
         if _quality_ok(scraper):
             try:
                 image = scraper.image()
@@ -95,26 +110,20 @@ def scrape_recipe_url(url: str) -> dict:
     except Exception:
         pass
 
-    # 2. Claude fallback
+    # 2. Claude fallback — reuse the already-fetched HTML
     if not settings.anthropic_api_key:
         raise ValueError(
             "Could not parse recipe from this URL. "
             "Add ANTHROPIC_API_KEY to enable AI fallback."
         )
 
-    return _claude_scrape(url, session)
+    return _claude_scrape(url, html)
 
 
-def _claude_scrape(url: str, session: requests.Session) -> dict:
+def _claude_scrape(url: str, html: str) -> dict:
     import anthropic
 
-    try:
-        resp = session.get(url, timeout=15)
-        resp.raise_for_status()
-    except Exception as e:
-        raise ValueError(f"Could not fetch URL: {e}")
-
-    soup = BeautifulSoup(resp.text, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
     for tag in soup(["script", "style", "nav", "footer", "header", "aside"]):
         tag.decompose()
 
