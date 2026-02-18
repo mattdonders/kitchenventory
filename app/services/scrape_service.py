@@ -28,14 +28,21 @@ def _quality_ok(scraper) -> bool:
 
 
 def _instructions_list(scraper) -> list:
+    import re
+    _NOISE = re.compile(r'^(step\s+\d+\.?|recipe\s+notes?\.?)$', re.IGNORECASE)
+
+    def _keep(s):
+        s = s.strip()
+        return bool(s) and not _NOISE.match(s)
+
     try:
         raw = scraper.instructions()
         if not raw:
             return []
         if isinstance(raw, list):
-            return [s.strip() for s in raw if s.strip()]
+            return [s.strip() for s in raw if _keep(s)]
         # recipe-scrapers returns \n-delimited string, NOT a list
-        return [s.strip() for s in raw.split("\n") if s.strip()]
+        return [s.strip() for s in raw.split("\n") if _keep(s)]
     except Exception:
         return []
 
