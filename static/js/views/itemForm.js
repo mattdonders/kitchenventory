@@ -1,14 +1,19 @@
 /**
- * Item form view — Quick Add and Edit
+ * Item form view — Add/Edit with autocomplete and quick-add mode
  * Persists last category/location to localStorage
  */
 const ItemFormView = (() => {
   const LS_CATEGORY = 'kv_last_category';
   const LS_LOCATION = 'kv_last_location';
+  const LS_MODE = 'kv_form_mode';
 
   let _categories = [];
   let _locations = [];
   let _editItem = null;
+  let _mode = 'standard'; // 'standard' | 'quickadd'
+  let _sessionItems = [];
+  let _autocompleteTimer = null;
+  let _container = null;
 
   function getLastCategory() {
     const v = localStorage.getItem(LS_CATEGORY);
@@ -20,6 +25,10 @@ const ItemFormView = (() => {
     return v ? parseInt(v) : null;
   }
 
+  function getLastMode() {
+    return localStorage.getItem(LS_MODE) || 'standard';
+  }
+
   function renderPills(items, selected, type) {
     return items.map(item => `
       <button type="button" class="pill ${selected === item.id ? 'selected' : ''}"
@@ -27,19 +36,28 @@ const ItemFormView = (() => {
     `).join('');
   }
 
+  function buildModeToggle() {
+    return `
+      <div class="mode-toggle">
+        <button type="button" class="mode-btn ${_mode === 'standard' ? 'active' : ''}" data-mode="standard">Standard</button>
+        <button type="button" class="mode-btn ${_mode === 'quickadd' ? 'active' : ''}" data-mode="quickadd">Quick Add</button>
+      </div>
+    `;
+  }
+
   function buildForm(item) {
     const selectedCat = item?.category_id ?? getLastCategory();
     const selectedLoc = item?.location_id ?? getLastLocation();
     const isEdit = !!item;
+    const isQuick = _mode === 'quickadd' && !isEdit;
 
     return `
-      <form id="item-form" autocomplete="off">
-        <div class="form-group">
-          <label class="form-label" for="item-name">Item Name *</label>
-          <input class="form-input" id="item-name" type="text" placeholder="e.g. Whole Milk"
-            value="${escapeHtml(item?.name || '')}" required autofocus />
-        </div>
+      ${!isEdit ? buildModeToggle() : ''}
 
+      <form id="item-form" autocomplete="off">
+        ${isQuick ? buildQuickRow(item) : buildStandardNameRow(item)}
+
+        ${!isQuick ? `
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="item-qty">Quantity</label>
@@ -52,6 +70,7 @@ const ItemFormView = (() => {
               value="${escapeHtml(item?.unit || '')}" />
           </div>
         </div>
+        ` : ''}
 
         <div class="form-group">
           <label class="form-label">Category</label>
@@ -69,6 +88,7 @@ const ItemFormView = (() => {
           <input type="hidden" id="selected-location" value="${selectedLoc || ''}" />
         </div>
 
+        ${!isQuick ? `
         <div class="optional-section">
           <button type="button" class="optional-toggle" id="optional-toggle">
             <span id="optional-icon">▸</span> Optional fields
@@ -93,17 +113,226 @@ const ItemFormView = (() => {
             </div>
           </div>
         </div>
+        ` : ''}
 
         <div style="margin-top: 24px; display: flex; gap: 10px;">
           ${isEdit ? '<button type="button" class="btn btn-secondary" id="cancel-edit">Cancel</button>' : ''}
-          <button type="submit" class="btn btn-primary btn-lg">${isEdit ? '💾 Save Changes' : '➕ Add Item'}</button>
+          <button type="submit" class="btn btn-primary btn-lg">
+            ${isEdit ? '💾 Save Changes' : isQuick ? '➕ Add & Next' : '➕ Add Item'}
+          </button>
         </div>
       </form>
+
+      ${isQuick ? buildSessionList() : ''}
     `;
   }
 
+  function buildStandardNameRow(item) {
+    return `
+      <div class="form-group autocomplete-wrap" id="autocomplete-wrap">
+        <label class="form-label" for="item-name">Item Name *</label>
+        <input class="form-input" id="item-name" type="text" placeholder="e.g. Whole Milk"
+          value="${escapeHtml(item?.name || '')}" required autofocus />
+        <div class="autocomplete-dropdown hidden" id="autocomplete-dropdown"></div>
+      </div>
+    `;
+  }
+
+  function buildQuickRow(item) {
+    return `
+      <div class="quick-add-row">
+        <div class="form-group autocomplete-wrap" id="autocomplete-wrap" style="flex:2;margin-bottom:0">
+          <label class="form-label" for="item-name">Name *</label>
+          <input class="form-input" id="item-name" type="text" placeholder="e.g. Milk"
+            value="${escapeHtml(item?.name || '')}" required autofocus />
+          <div class="autocomplete-dropdown hidden" id="autocomplete-dropdown"></div>
+        </div>
+        <div class="form-group" style="flex:0.6;margin-bottom:0">
+          <label class="form-label" for="item-qty">Qty</label>
+          <input class="form-input" id="item-qty" type="number" min="0" step="0.1"
+            value="${item?.quantity ?? 1}" />
+        </div>
+        <div class="form-group" style="flex:0.8;margin-bottom:0">
+          <label class="form-label" for="item-unit">Unit</label>
+          <input class="form-input" id="item-unit" type="text" placeholder="lbs, oz…"
+            value="${escapeHtml(item?.unit || '')}" />
+        </div>
+      </div>
+    `;
+  }
+
+  function buildSessionList() {
+    if (_sessionItems.length === 0) return '';
+    const rows = _sessionItems.map((item, idx) => `
+      <div class="session-item" data-idx="${idx}">
+        <span class="session-item-name">${escapeHtml(item.name)}</span>
+        <span class="session-item-qty">${item.quantity}${item.unit ? ' ' + escapeHtml(item.unit) : ''}</span>
+        ${item._locationName ? `<span class="session-item-loc">${escapeHtml(item._locationName)}</span>` : ''}
+        <button type="button" class="session-item-undo" data-idx="${idx}" title="Undo">✕</button>
+      </div>
+    `).join('');
+    return `
+      <div class="session-list">
+        <div class="session-list-header">
+          <span>Added this session (${_sessionItems.length})</span>
+        </div>
+        ${rows}
+      </div>
+    `;
+  }
+
+  // --- Autocomplete logic ---
+
+  function getAutocompleteSuggestions(query) {
+    const items = App.state.items || [];
+    const q = query.toLowerCase().trim();
+    if (!q) return [];
+
+    // Build unique names map: name -> best item (first match per name)
+    const seen = new Map();
+    for (const item of items) {
+      const key = item.name.toLowerCase().trim();
+      if (key.includes(q) && !seen.has(key)) {
+        seen.set(key, item);
+      }
+    }
+    return Array.from(seen.values()).slice(0, 8);
+  }
+
+  function getExistingLocations(name) {
+    const items = App.state.items || [];
+    const key = name.toLowerCase().trim();
+    return items.filter(i => i.name.toLowerCase().trim() === key && i.location);
+  }
+
+  function renderDropdown(suggestions, query) {
+    const dropdown = _container.querySelector('#autocomplete-dropdown');
+    if (!dropdown) return;
+
+    if (suggestions.length === 0) {
+      dropdown.classList.add('hidden');
+      return;
+    }
+
+    dropdown.innerHTML = suggestions.map((item, i) => {
+      const existingLocs = getExistingLocations(item.name);
+      const hint = existingLocs.length
+        ? `<span class="autocomplete-hint">${existingLocs.map(l => l.location.name + ' (' + l.quantity + ')').join(', ')}</span>`
+        : '';
+      return `
+        <div class="autocomplete-item" data-name="${escapeHtml(item.name)}"
+          data-unit="${escapeHtml(item.unit || '')}"
+          data-category="${item.category_id || ''}"
+          role="option" tabindex="-1">
+          <span class="autocomplete-item-name">${escapeHtml(item.name)}</span>
+          ${hint}
+        </div>
+      `;
+    }).join('');
+
+    dropdown.classList.remove('hidden');
+  }
+
+  function applyAutocompleteSelection(name, unit, categoryId) {
+    const nameInput = _container.querySelector('#item-name');
+    const unitInput = _container.querySelector('#item-unit');
+    if (nameInput) nameInput.value = name;
+    if (unitInput && unit) unitInput.value = unit;
+
+    // Auto-select category pill if not already selected by user
+    const selectedCatInput = _container.querySelector('#selected-category');
+    if (categoryId && selectedCatInput && !selectedCatInput.value) {
+      selectedCatInput.value = categoryId;
+      _container.querySelectorAll('.pill[data-type="category"]').forEach(p => {
+        p.classList.toggle('selected', parseInt(p.dataset.id) === parseInt(categoryId));
+      });
+    }
+
+    closeDropdown();
+  }
+
+  function closeDropdown() {
+    const dropdown = _container && _container.querySelector('#autocomplete-dropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+  }
+
+  function bindAutocomplete() {
+    const nameInput = _container.querySelector('#item-name');
+    const dropdown = _container.querySelector('#autocomplete-dropdown');
+    if (!nameInput || !dropdown) return;
+
+    nameInput.addEventListener('input', () => {
+      clearTimeout(_autocompleteTimer);
+      _autocompleteTimer = setTimeout(() => {
+        const suggestions = getAutocompleteSuggestions(nameInput.value);
+        renderDropdown(suggestions, nameInput.value);
+      }, 150);
+    });
+
+    nameInput.addEventListener('keydown', (e) => {
+      if (dropdown.classList.contains('hidden')) return;
+      const items = dropdown.querySelectorAll('.autocomplete-item');
+      const active = dropdown.querySelector('.autocomplete-item.active');
+      let idx = Array.from(items).indexOf(active);
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (idx < items.length - 1) idx++;
+        else idx = 0;
+        items.forEach(i => i.classList.remove('active'));
+        items[idx].classList.add('active');
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (idx > 0) idx--;
+        else idx = items.length - 1;
+        items.forEach(i => i.classList.remove('active'));
+        items[idx].classList.add('active');
+      } else if (e.key === 'Enter') {
+        if (active) {
+          e.preventDefault();
+          applyAutocompleteSelection(
+            active.dataset.name,
+            active.dataset.unit,
+            active.dataset.category
+          );
+        }
+      } else if (e.key === 'Escape') {
+        closeDropdown();
+      }
+    });
+
+    nameInput.addEventListener('blur', () => {
+      // Small delay so click on dropdown item fires first
+      setTimeout(closeDropdown, 150);
+    });
+
+    dropdown.addEventListener('mousedown', (e) => {
+      const item = e.target.closest('.autocomplete-item');
+      if (item) {
+        applyAutocompleteSelection(item.dataset.name, item.dataset.unit, item.dataset.category);
+      }
+    });
+  }
+
+  // --- Events ---
+
   function bindEvents(container) {
+    _container = container;
     const form = container.querySelector('#item-form');
+
+    // Mode toggle
+    container.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _mode = btn.dataset.mode;
+        localStorage.setItem(LS_MODE, _mode);
+        // Re-render the form area (keep category/location state)
+        const selectedCat = parseInt(container.querySelector('#selected-category')?.value) || null;
+        const selectedLoc = parseInt(container.querySelector('#selected-location')?.value) || null;
+        if (selectedCat) localStorage.setItem(LS_CATEGORY, selectedCat);
+        if (selectedLoc) localStorage.setItem(LS_LOCATION, selectedLoc);
+        rebuildFormArea(container);
+      });
+    });
 
     // Pill selection
     container.querySelectorAll('.pill').forEach(pill => {
@@ -114,10 +343,7 @@ const ItemFormView = (() => {
           type === 'category' ? '#selected-category' : '#selected-location'
         );
         const pills = container.querySelectorAll(`.pill[data-type="${type}"]`);
-
-        // Toggle selection
         if (hiddenInput.value === String(id)) {
-          // Deselect
           pill.classList.remove('selected');
           hiddenInput.value = '';
         } else {
@@ -128,7 +354,7 @@ const ItemFormView = (() => {
       });
     });
 
-    // Optional fields toggle
+    // Optional fields toggle (standard mode only)
     const toggle = container.querySelector('#optional-toggle');
     const optFields = container.querySelector('#optional-fields');
     const optIcon = container.querySelector('#optional-icon');
@@ -144,6 +370,26 @@ const ItemFormView = (() => {
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => App.navigate('inventory'));
     }
+
+    // Session list undo
+    container.addEventListener('click', async (e) => {
+      const undoBtn = e.target.closest('.session-item-undo');
+      if (!undoBtn) return;
+      const idx = parseInt(undoBtn.dataset.idx);
+      const sessionItem = _sessionItems[idx];
+      if (!sessionItem) return;
+      try {
+        await API.items.delete(sessionItem.id);
+        _sessionItems.splice(idx, 1);
+        rebuildSessionList(container);
+        Toast.show('Item removed', 'success');
+      } catch (err) {
+        Toast.show('Error: ' + err.message, 'error');
+      }
+    });
+
+    // Autocomplete
+    bindAutocomplete();
 
     // Submit
     form.addEventListener('submit', async (e) => {
@@ -161,19 +407,18 @@ const ItemFormView = (() => {
         unit: container.querySelector('#item-unit').value.trim(),
         category_id: categoryId ? parseInt(categoryId) : null,
         location_id: locationId ? parseInt(locationId) : null,
-        low_threshold: parseFloat(container.querySelector('#item-threshold').value) || 1,
-        expiration_date: container.querySelector('#item-expiry').value || null,
-        notes: container.querySelector('#item-notes').value.trim(),
+        low_threshold: parseFloat(container.querySelector('#item-threshold')?.value) || 1,
+        expiration_date: container.querySelector('#item-expiry')?.value || null,
+        notes: container.querySelector('#item-notes')?.value.trim() || '',
       };
 
       if (!payload.name) {
         Toast.show('Item name is required', 'error');
         submitBtn.disabled = false;
-        submitBtn.textContent = _editItem ? '💾 Save Changes' : '➕ Add Item';
+        submitBtn.textContent = _editItem ? '💾 Save Changes' : (_mode === 'quickadd' ? '➕ Add & Next' : '➕ Add Item');
         return;
       }
 
-      // Persist last category/location
       if (payload.category_id) localStorage.setItem(LS_CATEGORY, payload.category_id);
       if (payload.location_id) localStorage.setItem(LS_LOCATION, payload.location_id);
 
@@ -181,28 +426,70 @@ const ItemFormView = (() => {
         if (_editItem) {
           await API.items.update(_editItem.id, payload);
           Toast.show(`${payload.name} updated`, 'success');
+          App.navigate('inventory');
         } else {
-          await API.items.create(payload);
-          Toast.show(`${payload.name} added to inventory`, 'success');
-          form.reset();
-          // Reset pills
-          container.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
-          container.querySelector('#selected-category').value = '';
-          container.querySelector('#selected-location').value = '';
-          container.querySelector('#item-name').focus();
+          const created = await API.items.create(payload);
+          Toast.show(`${payload.name} added`, 'success');
+
+          // Update global items cache
+          if (!App.state.items) App.state.items = [];
+          App.state.items.push(created);
+
+          if (_mode === 'quickadd') {
+            // Track in session list
+            const locObj = _locations.find(l => l.id === payload.location_id);
+            _sessionItems.push({ ...created, _locationName: locObj?.name || null });
+            // Clear only name/qty/unit, keep category+location
+            container.querySelector('#item-name').value = '';
+            container.querySelector('#item-qty').value = '1';
+            container.querySelector('#item-unit').value = '';
+            closeDropdown();
+            rebuildSessionList(container);
+            container.querySelector('#item-name').focus();
+          } else {
+            form.reset();
+            container.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+            container.querySelector('#selected-category').value = '';
+            container.querySelector('#selected-location').value = '';
+            container.querySelector('#item-name').focus();
+          }
         }
-        if (_editItem) App.navigate('inventory');
       } catch (err) {
         Toast.show('Error: ' + err.message, 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = _editItem ? '💾 Save Changes' : '➕ Add Item';
+        submitBtn.textContent = _editItem ? '💾 Save Changes' : (_mode === 'quickadd' ? '➕ Add & Next' : '➕ Add Item');
       }
     });
   }
 
+  function rebuildFormArea(container) {
+    container.innerHTML = buildForm(_editItem);
+    bindEvents(container);
+    container.querySelector('#item-name')?.focus();
+  }
+
+  function rebuildSessionList(container) {
+    const existing = container.querySelector('.session-list');
+    const html = buildSessionList();
+    if (existing) {
+      if (html) {
+        existing.outerHTML = html;
+      } else {
+        existing.remove();
+      }
+    } else if (html) {
+      container.insertAdjacentHTML('beforeend', html);
+    }
+
+    // Re-bind undo buttons (delegated via container listener, already bound)
+  }
+
   async function render(container, state) {
     _editItem = null;
+    _sessionItems = [];
+    _mode = getLastMode();
+    _container = container;
     document.getElementById('page-title').textContent = 'Add Item';
 
     container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div></div>`;
@@ -216,10 +503,15 @@ const ItemFormView = (() => {
       App.state.categories = _categories;
       App.state.locations = _locations;
 
-      // If editing, fetch the item
+      // Ensure items are loaded for autocomplete
+      if (!App.state.items?.length) {
+        App.state.items = await API.items.list();
+      }
+
       if (state?.editId) {
         _editItem = await API.items.get(state.editId);
         document.getElementById('page-title').textContent = 'Edit Item';
+        _mode = 'standard'; // always standard mode for edits
       }
 
       container.innerHTML = buildForm(_editItem);

@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 from ..database import get_db
 from ..models import Item
-from ..schemas import ItemCreate, ItemUpdate, ItemOut, QuantityAdjust
+from ..schemas import ItemCreate, ItemUpdate, ItemOut, QuantityAdjust, ItemBulkCreate
 
 router = APIRouter()
 
@@ -46,6 +46,19 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_item)
     return db_item
+
+
+@router.post("/items/bulk", response_model=List[ItemOut], status_code=201)
+def bulk_create_items(payload: ItemBulkCreate, db: Session = Depends(get_db)):
+    db_items = []
+    for item_data in payload.items:
+        db_item = Item(**item_data.model_dump())
+        db.add(db_item)
+        db_items.append(db_item)
+    db.commit()
+    for db_item in db_items:
+        db.refresh(db_item)
+    return db_items
 
 
 @router.get("/items/{item_id}", response_model=ItemOut)

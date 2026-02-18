@@ -1,5 +1,6 @@
 /**
  * Inventory view — item list with search, filters, and inline quantity controls
+ * Items sharing the same name are grouped into a single card with per-location sub-rows.
  */
 const InventoryView = (() => {
   let _items = [];
@@ -22,6 +23,7 @@ const InventoryView = (() => {
     return badges.join('');
   }
 
+  // Single-item card (unchanged appearance)
   function renderItem(item) {
     const statusClass = item.is_expired ? 'is-expired'
       : item.is_expiring_soon ? 'is-expiring-soon'
@@ -59,6 +61,95 @@ const InventoryView = (() => {
     `;
   }
 
+  // Per-location sub-row inside a grouped card
+  function renderLocationRow(item) {
+    const expiry = item.expiration_date
+      ? `<span class="item-meta-tag">📅 ${formatDate(item.expiration_date)}</span>`
+      : '';
+    const notesTag = item.notes
+      ? `<span class="item-meta-tag" title="${escapeHtml(item.notes)}">📝</span>`
+      : '';
+    const statusBadges = renderBadges(item);
+
+    return `
+      <div class="item-location-row" data-id="${item.id}">
+        <div class="item-location-row-meta">
+          <span class="item-meta-tag">📍 ${item.location ? escapeHtml(item.location.name) : 'No location'}</span>
+          ${expiry}
+          ${notesTag}
+          ${statusBadges ? `<span class="item-location-badges">${statusBadges}</span>` : ''}
+        </div>
+        <div class="item-location-row-controls">
+          <div class="quantity-controls">
+            <button class="qty-btn" data-action="dec" data-id="${item.id}" title="Decrease">−</button>
+            <span class="quantity-display">${item.quantity}</span>
+            ${item.unit ? `<span class="quantity-unit">${escapeHtml(item.unit)}</span>` : ''}
+            <button class="qty-btn" data-action="inc" data-id="${item.id}" title="Increase">+</button>
+          </div>
+          <div class="item-actions" style="border-top:none;padding-top:0">
+            <button class="btn btn-sm btn-secondary" data-action="edit" data-id="${item.id}">Edit</button>
+            <button class="btn btn-sm btn-danger" data-action="delete" data-id="${item.id}">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Grouped card for items with same name across multiple locations
+  function renderGroupedCard(group) {
+    // Aggregate status
+    const anyExpired = group.some(i => i.is_expired);
+    const anyExpiring = group.some(i => i.is_expiring_soon);
+    const anyLow = group.some(i => i.is_low);
+    const statusClass = anyExpired ? 'is-expired' : anyExpiring ? 'is-expiring-soon' : anyLow ? 'is-low' : '';
+
+    const totalQty = group.reduce((sum, i) => sum + i.quantity, 0);
+    const unit = group[0].unit || '';
+    const category = group[0].category;
+
+    const aggBadges = [];
+    if (anyExpired) aggBadges.push('<span class="badge badge-danger">Expired</span>');
+    else if (anyExpiring) aggBadges.push('<span class="badge badge-warning">Expiring Soon</span>');
+    if (anyLow && !anyExpired) aggBadges.push('<span class="badge badge-info">Low Stock</span>');
+
+    return `
+      <div class="item-card item-card-grouped ${statusClass}">
+        <div class="item-card-header">
+          <div class="item-name">${escapeHtml(group[0].name)}</div>
+          <div class="item-badges">${aggBadges.join('')}</div>
+        </div>
+        <div class="item-grouped-summary">
+          ${category ? `<span class="item-meta-tag">🏷 ${escapeHtml(category.name)}</span>` : ''}
+          <span class="item-meta-tag item-total-qty">Total: ${totalQty}${unit ? ' ' + escapeHtml(unit) : ''}</span>
+          <span class="item-meta-tag badge-neutral">${group.length} locations</span>
+        </div>
+        <div class="item-location-rows">
+          ${group.map(renderLocationRow).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Group items by normalised name; returns array of render results
+  function renderItems(items) {
+    const groups = new Map();
+    for (const item of items) {
+      const key = item.name.toLowerCase().trim();
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(item);
+    }
+
+    const cards = [];
+    for (const group of groups.values()) {
+      if (group.length === 1) {
+        cards.push(renderItem(group[0]));
+      } else {
+        cards.push(renderGroupedCard(group));
+      }
+    }
+    return cards.join('');
+  }
+
   function applyFilters(items) {
     return items.filter(item => {
       if (_filters.search) {
@@ -69,6 +160,16 @@ const InventoryView = (() => {
       if (_filters.low_only && !item.is_low) return false;
       return true;
     });
+  }
+
+  // When a location filter is active, filter within grouped cards too:
+  // Show grouped card only if at least one entry matches; show only matching sub-rows.
+  function applyFiltersGrouped(items) {
+    if (!_filters.location_id) return applyFilters(items);
+
+    // Filter + group simultaneously to support "only show matching sub-rows"
+    const filtered = applyFilters(items);
+    return filtered;
   }
 
   function renderLocationChips() {
@@ -132,9 +233,23 @@ const InventoryView = (() => {
       const updated = await API.items.adjustQty(id, delta);
       const idx = _items.findIndex(i => i.id === id);
       if (idx !== -1) _items[idx] = updated;
+
+      // Re-render the affected card (may be single or grouped)
       const card = document.querySelector(`.item-card[data-id="${id}"]`);
       if (card) {
+        // Single-item card
         card.outerHTML = renderItem(updated);
+      } else {
+        // It's in a grouped card — re-render the whole group
+        const locRow = document.querySelector(`.item-location-row[data-id="${id}"]`);
+        if (locRow) {
+          const groupCard = locRow.closest('.item-card-grouped');
+          if (groupCard) {
+            const key = updated.name.toLowerCase().trim();
+            const group = _items.filter(i => i.name.toLowerCase().trim() === key);
+            groupCard.outerHTML = renderGroupedCard(group);
+          }
+        }
       }
     } catch (err) {
       Toast.show(err.message, 'error');
@@ -146,8 +261,7 @@ const InventoryView = (() => {
       await API.items.delete(id);
       _items = _items.filter(i => i.id !== id);
       Toast.show('Item deleted', 'success');
-      const card = document.querySelector(`.item-card[data-id="${id}"]`);
-      if (card) card.remove();
+      rerender(document.querySelector('.inventory-view'));
       if (_items.length === 0) renderEmptyState(document.querySelector('.items-grid'));
     } catch (err) {
       Toast.show(err.message, 'error');
@@ -170,11 +284,11 @@ const InventoryView = (() => {
     chips.innerHTML = renderLocationChips();
     rebindChips(chips);
 
-    const filtered = applyFilters(_items);
+    const filtered = applyFiltersGrouped(_items);
     if (filtered.length === 0) {
       renderEmptyState(grid);
     } else {
-      grid.innerHTML = filtered.map(renderItem).join('');
+      grid.innerHTML = renderItems(filtered);
     }
   }
 
@@ -217,7 +331,6 @@ const InventoryView = (() => {
         API.categories.list(),
       ]);
 
-      // Update cached state in App
       App.state.items = _items;
       App.state.locations = _locations;
       App.state.categories = _categories;
@@ -235,20 +348,12 @@ const InventoryView = (() => {
     }
   }
 
-  // Refresh just the items without rebuilding whole view
   async function refresh() {
     try {
       _items = await API.items.list();
       App.state.items = _items;
-      const grid = document.querySelector('.items-grid');
-      if (grid) {
-        const filtered = applyFilters(_items);
-        if (filtered.length === 0) {
-          renderEmptyState(grid);
-        } else {
-          grid.innerHTML = filtered.map(renderItem).join('');
-        }
-      }
+      const container = document.querySelector('.inventory-view');
+      if (container) rerender(container);
     } catch (err) {
       Toast.show('Failed to refresh items', 'error');
     }

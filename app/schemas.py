@@ -1,5 +1,5 @@
-from pydantic import BaseModel, computed_field
-from typing import Optional
+from pydantic import BaseModel, computed_field, field_validator
+from typing import Optional, List
 from datetime import date, datetime
 
 
@@ -70,6 +70,17 @@ class ItemOut(ItemBase):
 
 class QuantityAdjust(BaseModel):
     delta: float
+
+
+class ItemBulkCreate(BaseModel):
+    items: List[ItemCreate]
+
+    @field_validator('items')
+    @classmethod
+    def max_50_items(cls, v):
+        if len(v) > 50:
+            raise ValueError('Cannot create more than 50 items at once')
+        return v
 
 
 class ShoppingItemBase(BaseModel):

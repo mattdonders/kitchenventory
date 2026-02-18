@@ -33,6 +33,7 @@ const API = (() => {
     },
     get: (id) => request('GET', `/items/${id}`),
     create: (data) => request('POST', '/items', data),
+    bulkCreate: (dataArray) => request('POST', '/items/bulk', { items: dataArray }),
     update: (id, data) => request('PUT', `/items/${id}`, data),
     delete: (id) => request('DELETE', `/items/${id}`),
     adjustQty: (id, delta) => request('PATCH', `/items/${id}/quantity`, { delta }),
