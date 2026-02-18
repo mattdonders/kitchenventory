@@ -2,10 +2,22 @@
  * Settings view — version info, dark mode toggle, changelog
  */
 const SettingsView = (() => {
-  const APP_VERSION = '1.4.0';
+  const APP_VERSION = '1.5.0';
   const LS_THEME = 'kv_theme';
 
   const CHANGELOG = [
+    {
+      version: '1.5.0',
+      date: '2026-02-18',
+      changes: [
+        'Recipe Saver — import recipes from URLs (AllRecipes, food blogs, 300+ sites)',
+        'AI fallback — Claude parses recipes when site is unsupported',
+        'Saved recipe library — browse, filter by tags and favorites',
+        'Cooking checklist — tap ingredients and steps to check them off while cooking',
+        'AI recipe save — save any AI-generated suggestion to your library',
+        'Tag system — organize recipes with Family Favorites, Quick & Easy, One-Pan, and more',
+      ],
+    },
     {
       version: '1.4.0',
       date: '2026-02-18',

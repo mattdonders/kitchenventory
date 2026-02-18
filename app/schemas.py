@@ -146,3 +146,83 @@ class MealPlanEntryOut(MealPlanEntryBase):
     updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class ParseUrlRequest(BaseModel):
+    url: str
+
+
+class ParsedRecipe(BaseModel):
+    title: str
+    url: Optional[str] = None
+    image_url: Optional[str] = None
+    total_time: Optional[str] = None
+    yields: Optional[str] = None
+    ingredients: List[str] = []
+    instructions: List[str] = []
+    source: str = "url"
+
+
+class SavedRecipeCreate(BaseModel):
+    title: str
+    url: Optional[str] = None
+    image_url: Optional[str] = None
+    total_time: Optional[str] = None
+    yields: Optional[str] = None
+    ingredients: List[str] = []
+    instructions: List[str] = []
+    notes: str = ""
+    source: str = "manual"
+    is_favorite: bool = False
+    tags: List[str] = []
+
+
+class SavedRecipeUpdate(BaseModel):
+    title: Optional[str] = None
+    notes: Optional[str] = None
+    is_favorite: Optional[bool] = None
+    tags: Optional[List[str]] = None
+
+
+class SavedRecipeOut(BaseModel):
+    id: int
+    title: str
+    url: Optional[str] = None
+    image_url: Optional[str] = None
+    total_time: Optional[str] = None
+    yields: Optional[str] = None
+    ingredients: List[str] = []
+    instructions: List[str] = []
+    notes: str = ""
+    source: str = "manual"
+    is_favorite: bool = False
+    tags: List[str] = []
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    @field_validator('ingredients', 'instructions', mode='before')
+    @classmethod
+    def parse_json_list(cls, v):
+        if isinstance(v, str):
+            import json
+            return json.loads(v)
+        return v or []
+
+    @field_validator('tags', mode='before')
+    @classmethod
+    def parse_json_tags(cls, v):
+        if isinstance(v, str):
+            import json
+            return json.loads(v)
+        return v or []
+
+    model_config = {"from_attributes": True}
+
+
+class RecipeTagOut(BaseModel):
+    id: int
+    name: str
+    slug: str
+    sort_order: int
+
+    model_config = {"from_attributes": True}

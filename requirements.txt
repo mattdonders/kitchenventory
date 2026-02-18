@@ -5,3 +5,6 @@ pydantic
 pydantic-settings
 anthropic
 python-dotenv
+recipe-scrapers[online]
+beautifulsoup4
+requests

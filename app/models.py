@@ -68,3 +68,31 @@ class MealPlanEntry(Base):
     recipe_id = Column(Integer, nullable=True)  # future-proofing, unused in Phase 1
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class RecipeTag(Base):
+    __tablename__ = "recipe_tags"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+    slug = Column(String, unique=True, nullable=False)
+    sort_order = Column(Integer, default=0)
+
+
+class SavedRecipe(Base):
+    __tablename__ = "saved_recipes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    url = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
+    total_time = Column(String, nullable=True)
+    yields = Column(String, nullable=True)
+    ingredients = Column(String, nullable=False)  # JSON array stored as text
+    instructions = Column(String, nullable=False)  # JSON array stored as text
+    notes = Column(String, default="")
+    source = Column(String, default="manual")  # "url" / "ai" / "manual"
+    is_favorite = Column(Boolean, default=False)
+    tags = Column(String, default="[]")  # JSON array of slugs stored as text
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

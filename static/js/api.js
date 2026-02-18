@@ -64,6 +64,19 @@ const API = (() => {
   // Recipes
   const recipes = {
     suggest: (dietary_notes = '') => request('POST', '/recipes/suggest', { dietary_notes }),
+    parseUrl: (url) => request('POST', '/recipes/parse-url', { url }),
+    listTags: () => request('GET', '/recipes/tags'),
+    listSaved: (params = {}) => {
+      const qs = new URLSearchParams(
+        Object.fromEntries(Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== ''))
+      ).toString();
+      return request('GET', `/recipes/saved${qs ? '?' + qs : ''}`);
+    },
+    saveSaved: (data) => request('POST', '/recipes/saved', data),
+    getSaved: (id) => request('GET', `/recipes/saved/${id}`),
+    updateSaved: (id, data) => request('PUT', `/recipes/saved/${id}`, data),
+    deleteSaved: (id) => request('DELETE', `/recipes/saved/${id}`),
+    toggleFavorite: (id, is_favorite) => request('PUT', `/recipes/saved/${id}`, { is_favorite }),
   };
 
   // Meal Plan
