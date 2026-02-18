@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#2d6a4f"/>
+  <!-- Pantry shelf -->
+  <rect x="96" y="160" width="320" height="24" rx="8" fill="white" opacity="0.9"/>
+  <rect x="96" y="280" width="320" height="24" rx="8" fill="white" opacity="0.9"/>
+  <!-- Items on shelves -->
+  <rect x="120" y="104" width="48" height="56" rx="10" fill="#52b788"/>
+  <rect x="184" y="116" width="40" height="44" rx="10" fill="#74c69d"/>
+  <rect x="240" y="108" width="44" height="52" rx="10" fill="#52b788"/>
+  <rect x="300" y="112" width="40" height="48" rx="10" fill="#40916c"/>
+  <rect x="120" y="224" width="44" height="56" rx="10" fill="#74c69d"/>
+  <rect x="180" y="230" width="40" height="50" rx="10" fill="#52b788"/>
+  <rect x="236" y="220" width="48" height="60" rx="10" fill="#40916c"/>
+  <rect x="300" y="228" width="42" height="52" rx="10" fill="#52b788"/>
+  <!-- Bottom row -->
+  <rect x="120" y="344" width="50" height="60" rx="10" fill="#52b788"/>
+  <rect x="186" y="352" width="44" height="52" rx="10" fill="#74c69d"/>
+  <rect x="246" y="344" width="48" height="60" rx="10" fill="#40916c"/>
+  <rect x="310" y="350" width="42" height="54" rx="10" fill="#52b788"/>
+</svg>

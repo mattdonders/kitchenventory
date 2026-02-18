@@ -1,10 +1,20 @@
 /**
- * Settings view — version info and changelog
+ * Settings view — version info, dark mode toggle, changelog
  */
 const SettingsView = (() => {
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.2.0';
+  const LS_THEME = 'kv_theme';
 
   const CHANGELOG = [
+    {
+      version: '1.2.0',
+      date: '2026-02-18',
+      changes: [
+        'Dark mode — system-aware with manual Light / Dark / System override in Settings',
+        'Quantity +/- debouncing — rapid taps batch into a single API call with optimistic display',
+        'Installable PWA — add to home screen on iOS and Android',
+      ],
+    },
     {
       version: '1.1.0',
       date: '2026-02-18',
@@ -12,7 +22,7 @@ const SettingsView = (() => {
         'Autocomplete on item name — suggestions from your inventory with unit/category auto-fill',
         'Quick-add mode — compact form that keeps category/location selected between adds',
         'Session list in quick-add — shows items added this session with one-tap undo',
-        'Grouped inventory cards — items with the same name across multiple locations merge into one card with per-location sub-rows',
+        'Grouped inventory cards — same-name items across locations merge into one card with per-location sub-rows',
         'Bulk create API endpoint (POST /api/items/bulk, up to 50 items)',
       ],
     },
@@ -30,8 +40,25 @@ const SettingsView = (() => {
     },
   ];
 
+  // --- Theme ---
+
+  function getTheme() {
+    return localStorage.getItem(LS_THEME) || 'system';
+  }
+
+  function applyTheme(mode) {
+    localStorage.setItem(LS_THEME, mode);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const useDark = mode === 'dark' || (mode === 'system' && prefersDark);
+    document.documentElement.setAttribute('data-theme', useDark ? 'dark' : 'light');
+  }
+
+  // --- Render ---
+
   function render(container) {
-    const rows = CHANGELOG.map((entry, i) => `
+    const currentTheme = getTheme();
+
+    const changelogRows = CHANGELOG.map((entry, i) => `
       <div class="changelog-entry ${i === 0 ? 'changelog-entry-latest' : ''}">
         <div class="changelog-version-row">
           <span class="changelog-version">v${entry.version}</span>
@@ -54,12 +81,33 @@ const SettingsView = (() => {
         </div>
 
         <div class="settings-section">
+          <div class="section-title">Appearance</div>
+          <div class="settings-row">
+            <span class="settings-row-label">Theme</span>
+            <div class="mode-toggle">
+              <button type="button" class="mode-btn ${currentTheme === 'system' ? 'active' : ''}" data-theme="system">System</button>
+              <button type="button" class="mode-btn ${currentTheme === 'light' ? 'active' : ''}" data-theme="light">Light</button>
+              <button type="button" class="mode-btn ${currentTheme === 'dark' ? 'active' : ''}" data-theme="dark">Dark</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
           <div class="section-title">Changelog</div>
-          ${rows}
+          ${changelogRows}
         </div>
       </div>
     `;
+
+    container.querySelectorAll('[data-theme]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        applyTheme(btn.dataset.theme);
+        container.querySelectorAll('[data-theme]').forEach(b =>
+          b.classList.toggle('active', b.dataset.theme === btn.dataset.theme)
+        );
+      });
+    });
   }
 
-  return { render, APP_VERSION };
+  return { render, applyTheme, getTheme, APP_VERSION };
 })();

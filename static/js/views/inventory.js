@@ -8,6 +8,7 @@ const InventoryView = (() => {
   let _categories = [];
   let _filters = { search: '', location_id: null, low_only: false };
   let _searchTimeout = null;
+  const _qtyDebounce = {}; // { [itemId]: { delta, timer } }
 
   function formatDate(dateStr) {
     if (!dateStr) return null;
@@ -228,32 +229,55 @@ const InventoryView = (() => {
     });
   }
 
-  async function adjustQty(id, delta) {
-    try {
-      const updated = await API.items.adjustQty(id, delta);
-      const idx = _items.findIndex(i => i.id === id);
-      if (idx !== -1) _items[idx] = updated;
+  function updateQtyDisplay(id, qty) {
+    document.querySelectorAll(
+      `.item-card[data-id="${id}"] .quantity-display, .item-location-row[data-id="${id}"] .quantity-display`
+    ).forEach(el => el.textContent = qty);
+  }
 
-      // Re-render the affected card (may be single or grouped)
-      const card = document.querySelector(`.item-card[data-id="${id}"]`);
-      if (card) {
-        // Single-item card
-        card.outerHTML = renderItem(updated);
-      } else {
-        // It's in a grouped card — re-render the whole group
-        const locRow = document.querySelector(`.item-location-row[data-id="${id}"]`);
-        if (locRow) {
-          const groupCard = locRow.closest('.item-card-grouped');
-          if (groupCard) {
-            const key = updated.name.toLowerCase().trim();
-            const group = _items.filter(i => i.name.toLowerCase().trim() === key);
-            groupCard.outerHTML = renderGroupedCard(group);
-          }
+  function rerenderCard(id, updated) {
+    const card = document.querySelector(`.item-card[data-id="${id}"]`);
+    if (card) {
+      card.outerHTML = renderItem(updated);
+    } else {
+      const locRow = document.querySelector(`.item-location-row[data-id="${id}"]`);
+      if (locRow) {
+        const groupCard = locRow.closest('.item-card-grouped');
+        if (groupCard) {
+          const key = updated.name.toLowerCase().trim();
+          const group = _items.filter(i => i.name.toLowerCase().trim() === key);
+          groupCard.outerHTML = renderGroupedCard(group);
         }
       }
-    } catch (err) {
-      Toast.show(err.message, 'error');
     }
+  }
+
+  function adjustQty(id, delta) {
+    if (!_qtyDebounce[id]) _qtyDebounce[id] = { delta: 0, timer: null };
+    clearTimeout(_qtyDebounce[id].timer);
+    _qtyDebounce[id].delta += delta;
+
+    // Optimistic display — show updated number immediately
+    const item = _items.find(i => i.id === id);
+    if (item) {
+      updateQtyDisplay(id, Math.max(0, item.quantity + _qtyDebounce[id].delta));
+    }
+
+    _qtyDebounce[id].timer = setTimeout(async () => {
+      const accumulated = _qtyDebounce[id].delta;
+      delete _qtyDebounce[id];
+      try {
+        const updated = await API.items.adjustQty(id, accumulated);
+        const idx = _items.findIndex(i => i.id === id);
+        if (idx !== -1) _items[idx] = updated;
+        rerenderCard(id, updated);
+      } catch (err) {
+        Toast.show(err.message, 'error');
+        // Revert optimistic update
+        const item = _items.find(i => i.id === id);
+        if (item) updateQtyDisplay(id, item.quantity);
+      }
+    }, 500);
   }
 
   async function deleteItem(id) {
