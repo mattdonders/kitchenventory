@@ -18,14 +18,14 @@ Available categories: {", ".join(CATEGORIES)}
 Rules:
 - name: capitalize properly (e.g. "Whole Milk", "Greek Yogurt")
 - quantity: number, default 1 if not specified
-- unit: common unit string (e.g. "gallons", "oz", "lbs", "cans", "boxes", "bags", "jars", "bottles", "dozen", "packs", "pkgs", "bags", "rolls", "loaves", "heads", "bunches") — empty string if none makes sense
-- For packaged goods (chicken, frozen veg, deli meat, etc.) where weight is not specified, use "packs", "pkgs", or "bags" — do NOT assume a weight unit
+- unit: always singular — the unit represents one container/measure, quantity is separate (e.g. "bag" not "bags", "can" not "cans", "gallon" not "gallons"). Common units: "gallon", "oz", "lb", "can", "box", "bag", "jar", "bottle", "dozen", "pack", "pkg", "roll", "loaf", "head", "bunch" — empty string if none makes sense
+- For packaged goods (chicken, frozen veg, deli meat, etc.) where weight is not specified, use "pack", "pkg", or "bag" — do NOT assume a weight unit
 - category: pick the best match from the available categories
 
 Examples:
-"2 gallons milk" → {{"name": "Whole Milk", "quantity": 2, "unit": "gallons", "category": "dairy"}}
+"2 gallons milk" → {{"name": "Whole Milk", "quantity": 2, "unit": "gallon", "category": "dairy"}}
 "eggs" → {{"name": "Eggs", "quantity": 1, "unit": "dozen", "category": "dairy"}}
-"3 cans tomatoes" → {{"name": "Canned Tomatoes", "quantity": 3, "unit": "cans", "category": "produce"}}
+"3 cans tomatoes" → {{"name": "Canned Tomatoes", "quantity": 3, "unit": "can", "category": "produce"}}
 "pasta" → {{"name": "Pasta", "quantity": 1, "unit": "box", "category": "dry goods"}}
 "olive oil 16oz" → {{"name": "Olive Oil", "quantity": 16, "unit": "oz", "category": "condiments"}}
 
