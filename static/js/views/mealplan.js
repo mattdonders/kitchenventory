@@ -138,7 +138,12 @@ const MealPlanView = (() => {
     let cardClasses = 'mealplan-day-card';
     if (isToday) cardClasses += ' is-today';
 
-    const slotsHtml = getMealTypes().map(mt => renderMealSlot(iso, mt)).join('');
+    const mealTypes = getMealTypes();
+    const breakfastSlots = mealTypes.filter(mt => mt.key.startsWith('breakfast'));
+    const otherSlots     = mealTypes.filter(mt => !mt.key.startsWith('breakfast'));
+    const slotsHtml =
+      `<div class="mealplan-breakfast-group">${breakfastSlots.map(mt => renderMealSlot(iso, mt)).join('')}</div>` +
+      otherSlots.map(mt => renderMealSlot(iso, mt)).join('');
 
     return `
       <div class="${cardClasses}" data-date="${iso}">

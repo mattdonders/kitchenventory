@@ -1707,6 +1707,11 @@ a {
   border-top: 1px solid var(--color-border);
 }
 
+/* Breakfast group — transparent wrapper; separator before lunch on mobile */
+.mealplan-breakfast-group + .mealplan-meal-slot {
+  border-top: 1px solid var(--color-border);
+}
+
 .mealplan-meal-slot-header {
   display: flex;
   align-items: center;
@@ -1977,6 +1982,17 @@ a {
   .mealplan-meal-slot + .mealplan-meal-slot {
     border-top: none;
     border-left: 1px solid var(--color-border);
+  }
+
+  /* Breakfast group occupies the breakfast column; stacked slots use border-top */
+  .mealplan-breakfast-group + .mealplan-meal-slot {
+    border-top: none;
+    border-left: 1px solid var(--color-border);
+  }
+
+  .mealplan-breakfast-group .mealplan-meal-slot + .mealplan-meal-slot {
+    border-top: 1px solid var(--color-border);
+    border-left: none;
   }
 
   .mealplan-meal-slot.is-editing {
