@@ -1938,19 +1938,50 @@ a {
   color: var(--color-info);
 }
 
-/* Tablet: 2-col grid */
+/* Tablet+: horizontal rows (day label | breakfast | lunch | dinner) */
 @media (min-width: 600px) {
   .mealplan-week-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-}
 
-/* Desktop: 7-col grid */
-@media (min-width: 1000px) {
-  .mealplan-week-grid {
-    grid-template-columns: repeat(7, 1fr);
+  .mealplan-day-card {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr 1fr;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .mealplan-day-header {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 14px 8px;
+    margin-bottom: 0;
+    padding-bottom: 14px;
+    border-bottom: none;
+    border-right: 1px solid var(--color-border);
+    gap: 2px;
+  }
+
+  .mealplan-day-name {
+    min-width: unset;
+  }
+
+  .mealplan-meal-slot {
+    padding: 10px 14px;
+  }
+
+  .mealplan-meal-slot + .mealplan-meal-slot {
+    border-top: none;
+    border-left: 1px solid var(--color-border);
+  }
+
+  .mealplan-meal-slot.is-editing {
+    margin: 0;
+    padding: 10px 14px;
   }
 }
 
