@@ -157,6 +157,10 @@ class MealPlanEntryOut(MealPlanEntryBase):
     model_config = {"from_attributes": True}
 
 
+class AppSettingUpdate(BaseModel):
+    value: str
+
+
 class ParseUrlRequest(BaseModel):
     url: str
 

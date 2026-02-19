@@ -73,6 +73,13 @@ class MealPlanEntry(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+
+    key = Column(String, primary_key=True)
+    value = Column(String, nullable=False)
+
+
 class RecipeTag(Base):
     __tablename__ = "recipe_tags"
 

@@ -91,5 +91,11 @@ const API = (() => {
     delete: (id) => request('DELETE', `/mealplan/${id}`),
   };
 
-  return { items, categories, locations, shopping, recipes, mealplan };
+  // App Settings
+  const settings = {
+    list:   ()          => request('GET',   '/settings'),
+    update: (key, value) => request('PATCH', `/settings/${key}`, { value }),
+  };
+
+  return { items, categories, locations, shopping, recipes, mealplan, settings };
 })();

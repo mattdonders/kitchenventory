@@ -4,10 +4,8 @@
 const SettingsView = (() => {
   const APP_VERSION = '1.6.0';
   const LS_THEME = 'kv_theme';
-  const LS_BREAKFAST_SLOTS = 'kv_breakfast_slots';
-
   function getBreakfastSlots() {
-    return parseInt(localStorage.getItem(LS_BREAKFAST_SLOTS) || '1');
+    return parseInt(App.state.settings.breakfast_slots || '1');
   }
 
   const CHANGELOG = [
@@ -157,11 +155,16 @@ const SettingsView = (() => {
     `;
 
     container.querySelectorAll('[data-breakfast-slots]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        localStorage.setItem(LS_BREAKFAST_SLOTS, btn.dataset.breakfastSlots);
-        container.querySelectorAll('[data-breakfast-slots]').forEach(b =>
-          b.classList.toggle('active', b.dataset.breakfastSlots === btn.dataset.breakfastSlots)
-        );
+      btn.addEventListener('click', async () => {
+        const val = btn.dataset.breakfastSlots;
+        try {
+          App.state.settings = await API.settings.update('breakfast_slots', val);
+          container.querySelectorAll('[data-breakfast-slots]').forEach(b =>
+            b.classList.toggle('active', b.dataset.breakfastSlots === val)
+          );
+        } catch (err) {
+          Toast.show('Failed to save setting', 'error');
+        }
       });
     });
 

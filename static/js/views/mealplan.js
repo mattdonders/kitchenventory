@@ -10,7 +10,7 @@ const MealPlanView = (() => {
 
   // Meal type config — breakfast count driven by Settings
   function getMealTypes() {
-    const slots = SettingsView.getBreakfastSlots();
+    const slots = parseInt(App.state.settings?.breakfast_slots || '1');
     const breakfasts = Array.from({ length: slots }, (_, i) => ({
       key:   i === 0 ? 'breakfast' : `breakfast_${i + 1}`,
       label: i === 0 ? 'Breakfast' : `Breakfast ${i + 1}`,

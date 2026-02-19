@@ -7,6 +7,7 @@ const App = (() => {
     items: [],
     categories: [],
     locations: [],
+    settings: {},
   };
 
   const VIEWS = {
@@ -86,8 +87,15 @@ const App = (() => {
 
   async function init() {
     const loader = document.getElementById('initial-loader');
-    if (loader) loader.remove();
 
+    // Load server-side settings before first render so all views have them
+    try {
+      state.settings = await API.settings.list();
+    } catch {
+      state.settings = {};
+    }
+
+    if (loader) loader.remove();
     navigate('inventory');
   }
 

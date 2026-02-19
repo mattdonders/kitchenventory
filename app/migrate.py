@@ -13,7 +13,20 @@ def migrate():
     """Apply incremental schema migrations."""
     with engine.connect() as conn:
         _add_meal_type_column(conn)
+        _create_settings_table(conn)
         conn.commit()
+
+
+def _create_settings_table(conn):
+    """Create app_settings key/value table and seed defaults."""
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS app_settings (
+            key   TEXT PRIMARY KEY NOT NULL,
+            value TEXT NOT NULL
+        )
+    """))
+    # Seed defaults — INSERT OR IGNORE so existing values are never overwritten
+    conn.execute(text("INSERT OR IGNORE INTO app_settings (key, value) VALUES ('breakfast_slots', '1')"))
 
 
 def _add_meal_type_column(conn):

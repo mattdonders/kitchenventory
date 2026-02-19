@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from .database import engine, Base
 from .migrate import migrate
 from .seed import seed_data
-from .routers import items, categories, locations, shopping, recipes, mealplan
+from .routers import items, categories, locations, shopping, recipes, mealplan, appsettings
 
 
 @asynccontextmanager
@@ -40,6 +40,7 @@ app.include_router(locations.router, prefix="/api")
 app.include_router(shopping.router, prefix="/api")
 app.include_router(recipes.router, prefix="/api")
 app.include_router(mealplan.router, prefix="/api")
+app.include_router(appsettings.router, prefix="/api")
 
 # Serve frontend — must come last
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
