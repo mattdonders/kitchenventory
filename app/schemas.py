@@ -132,6 +132,14 @@ class MealPlanEntryBase(BaseModel):
 
 class MealPlanEntryCreate(MealPlanEntryBase):
     date: date  # YYYY-MM-DD
+    meal_type: str = "dinner"  # "breakfast" | "lunch" | "dinner"
+
+    @field_validator('meal_type')
+    @classmethod
+    def validate_meal_type(cls, v):
+        if v not in ("breakfast", "lunch", "dinner"):
+            raise ValueError('meal_type must be breakfast, lunch, or dinner')
+        return v
 
 
 class MealPlanEntryUpdate(BaseModel):
@@ -142,6 +150,7 @@ class MealPlanEntryUpdate(BaseModel):
 class MealPlanEntryOut(MealPlanEntryBase):
     id: int
     date: date
+    meal_type: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

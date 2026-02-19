@@ -2,10 +2,20 @@
  * Settings view — version info, dark mode toggle, changelog
  */
 const SettingsView = (() => {
-  const APP_VERSION = '1.5.0';
+  const APP_VERSION = '1.6.0';
   const LS_THEME = 'kv_theme';
 
   const CHANGELOG = [
+    {
+      version: '1.6.0',
+      date: '2026-02-18',
+      changes: [
+        'Breakfast, Lunch & Dinner — plan all three meals per day separately',
+        'Meal slot icons — mug for breakfast, sun for lunch, moon for dinner',
+        'Per-slot editing — tap any meal slot to add, edit, or clear that meal independently',
+        'Existing dinner plans preserved — current entries migrate automatically to dinner slot',
+      ],
+    },
     {
       version: '1.5.0',
       date: '2026-02-18',

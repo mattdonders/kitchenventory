@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import case
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date, timedelta
@@ -31,19 +32,27 @@ def list_meal_plan(
     monday = _week_monday(anchor)
     sunday = monday + timedelta(days=6)
 
+    meal_order = case(
+        (MealPlanEntry.meal_type == "breakfast", 1),
+        (MealPlanEntry.meal_type == "lunch", 2),
+        (MealPlanEntry.meal_type == "dinner", 3),
+    )
     return (
         db.query(MealPlanEntry)
         .filter(MealPlanEntry.date >= monday, MealPlanEntry.date <= sunday)
-        .order_by(MealPlanEntry.date)
+        .order_by(MealPlanEntry.date, meal_order)
         .all()
     )
 
 
 @router.post("/mealplan", response_model=MealPlanEntryOut, status_code=201)
 def create_meal_plan_entry(entry: MealPlanEntryCreate, db: Session = Depends(get_db)):
-    existing = db.query(MealPlanEntry).filter(MealPlanEntry.date == entry.date).first()
+    existing = db.query(MealPlanEntry).filter(
+        MealPlanEntry.date == entry.date,
+        MealPlanEntry.meal_type == entry.meal_type
+    ).first()
     if existing:
-        raise HTTPException(status_code=409, detail=f"An entry already exists for {entry.date}")
+        raise HTTPException(status_code=409, detail=f"A {entry.meal_type} entry already exists for {entry.date}")
 
     db_entry = MealPlanEntry(**entry.model_dump())
     db.add(db_entry)

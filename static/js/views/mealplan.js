@@ -1,12 +1,19 @@
 /**
- * Meal Planner view — weekly grid with pantry snapshot
+ * Meal Planner view — weekly grid with 3 meal slots per day (breakfast, lunch, dinner)
  */
 const MealPlanView = (() => {
   // State
-  let _weekMonday = null;   // Date object — Monday of displayed week
-  let _entries = [];        // MealPlanEntryOut[] for current week
-  let _editingDate = null;  // ISO string of the day currently in edit mode
-  let _pantryItems = [];    // ItemOut[] — loaded once per view render
+  let _weekMonday = null;     // Date object — Monday of displayed week
+  let _entries = [];          // MealPlanEntryOut[] for current week
+  let _editingSlot = null;    // { date: "YYYY-MM-DD", meal_type: "breakfast"|"lunch"|"dinner" } or null
+  let _pantryItems = [];      // ItemOut[] — loaded once per view render
+
+  // Meal type config
+  const MEAL_TYPES = [
+    { key: 'breakfast', label: 'Breakfast', icon: 'fa-mug-hot' },
+    { key: 'lunch',     label: 'Lunch',     icon: 'fa-sun' },
+    { key: 'dinner',    label: 'Dinner',    icon: 'fa-moon' },
+  ];
 
   // ---- Date helpers ----
 
@@ -46,29 +53,24 @@ const MealPlanView = (() => {
 
   // ---- Rendering helpers ----
 
-  function renderDayCard(dateObj, entry) {
-    const iso = toISO(dateObj);
-    const todayISO = toISO(new Date());
-    const isToday = iso === todayISO;
-    const isEmpty = !entry;
-    const isEditing = _editingDate === iso;
+  function renderMealSlot(iso, mealType) {
+    const entry = _entries.find(e => e.date === iso && e.meal_type === mealType.key) || null;
+    const isEditing = _editingSlot && _editingSlot.date === iso && _editingSlot.meal_type === mealType.key;
 
-    const dayName = DAY_NAMES[dateObj.getDay()];
-    const dayNum = dateObj.getDate();
-
-    let cardClasses = 'mealplan-day-card';
-    if (isToday) cardClasses += ' is-today';
-    if (isEmpty && !isEditing) cardClasses += ' is-empty';
-
-    let bodyHtml;
+    let contentHtml;
 
     if (isEditing) {
-      bodyHtml = `
-        <form class="mealplan-edit-form" data-date="${iso}">
+      const placeholders = {
+        breakfast: "What's for breakfast?",
+        lunch: "What's for lunch?",
+        dinner: "What's for dinner?",
+      };
+      contentHtml = `
+        <form class="mealplan-edit-form" data-date="${iso}" data-meal-type="${mealType.key}">
           <input
             type="text"
             class="mealplan-input-name"
-            placeholder="What's for dinner?"
+            placeholder="${placeholders[mealType.key]}"
             value="${entry ? escapeHtml(entry.meal_name) : ''}"
             autocomplete="off"
             required
@@ -79,31 +81,56 @@ const MealPlanView = (() => {
             rows="2"
           >${entry ? escapeHtml(entry.notes || '') : ''}</textarea>
           <div class="mealplan-edit-actions">
-            <button type="submit" class="mealplan-btn-save" data-action="save" data-date="${iso}">Save</button>
-            <button type="button" class="mealplan-btn-cancel" data-action="cancel" data-date="${iso}">Cancel</button>
+            <button type="submit" class="mealplan-btn-save" data-action="save" data-date="${iso}" data-meal-type="${mealType.key}">Save</button>
+            <button type="button" class="mealplan-btn-cancel" data-action="cancel" data-date="${iso}" data-meal-type="${mealType.key}">Cancel</button>
           </div>
         </form>
       `;
     } else if (entry) {
-      bodyHtml = `
+      contentHtml = `
         <div class="mealplan-meal-name">${escapeHtml(entry.meal_name)}</div>
         ${entry.notes ? `<div class="mealplan-meal-notes">${escapeHtml(entry.notes)}</div>` : ''}
         <div class="mealplan-day-actions">
-          <button class="mealplan-btn-edit" data-action="edit" data-date="${iso}">
+          <button class="mealplan-btn-edit" data-action="edit" data-date="${iso}" data-meal-type="${mealType.key}">
             <i class="fa-solid fa-pencil"></i> Edit
           </button>
-          <button class="mealplan-btn-clear" data-action="delete" data-id="${entry.id}" data-date="${iso}">
+          <button class="mealplan-btn-clear" data-action="delete" data-id="${entry.id}" data-date="${iso}" data-meal-type="${mealType.key}">
             <i class="fa-solid fa-trash"></i> Clear
           </button>
         </div>
       `;
     } else {
-      bodyHtml = `
-        <button class="mealplan-btn-add" data-action="edit" data-date="${iso}">
-          <i class="fa-solid fa-plus"></i> Add meal
+      contentHtml = `
+        <button class="mealplan-btn-add" data-action="edit" data-date="${iso}" data-meal-type="${mealType.key}">
+          <i class="fa-solid fa-plus"></i> Add
         </button>
       `;
     }
+
+    const slotClasses = ['mealplan-meal-slot', isEditing ? 'is-editing' : ''].filter(Boolean).join(' ');
+    return `
+      <div class="${slotClasses}" data-date="${iso}" data-meal-type="${mealType.key}">
+        <div class="mealplan-meal-slot-header">
+          <i class="fa-solid ${mealType.icon}"></i>
+          <span>${mealType.label}</span>
+        </div>
+        ${contentHtml}
+      </div>
+    `;
+  }
+
+  function renderDayCard(dateObj) {
+    const iso = toISO(dateObj);
+    const todayISO = toISO(new Date());
+    const isToday = iso === todayISO;
+
+    const dayName = DAY_NAMES[dateObj.getDay()];
+    const dayNum = dateObj.getDate();
+
+    let cardClasses = 'mealplan-day-card';
+    if (isToday) cardClasses += ' is-today';
+
+    const slotsHtml = MEAL_TYPES.map(mt => renderMealSlot(iso, mt)).join('');
 
     return `
       <div class="${cardClasses}" data-date="${iso}">
@@ -111,7 +138,7 @@ const MealPlanView = (() => {
           <span class="mealplan-day-name">${dayName}</span>
           <span class="mealplan-day-date">${dayNum}</span>
         </div>
-        ${bodyHtml}
+        ${slotsHtml}
       </div>
     `;
   }
@@ -121,9 +148,7 @@ const MealPlanView = (() => {
     for (let i = 0; i < 7; i++) {
       const d = new Date(_weekMonday);
       d.setDate(_weekMonday.getDate() + i);
-      const iso = toISO(d);
-      const entry = _entries.find(e => e.date === iso) || null;
-      days.push(renderDayCard(d, entry));
+      days.push(renderDayCard(d));
     }
     return days.join('');
   }
@@ -241,18 +266,19 @@ const MealPlanView = (() => {
 
       const action = btn.dataset.action;
       const dateStr = btn.dataset.date;
+      const mealType = btn.dataset.mealType;
 
       if (action === 'edit') {
-        _editingDate = dateStr;
+        _editingSlot = { date: dateStr, meal_type: mealType };
         reRenderGrid(viewEl);
         // Focus the input after re-render
-        const form = viewEl.querySelector(`.mealplan-edit-form[data-date="${dateStr}"]`);
+        const form = viewEl.querySelector(`.mealplan-edit-form[data-date="${dateStr}"][data-meal-type="${mealType}"]`);
         if (form) form.querySelector('.mealplan-input-name')?.focus();
         return;
       }
 
       if (action === 'cancel') {
-        _editingDate = null;
+        _editingSlot = null;
         reRenderGrid(viewEl);
         return;
       }
@@ -264,7 +290,7 @@ const MealPlanView = (() => {
         try {
           await API.mealplan.delete(id);
           _entries = _entries.filter(e => e.id !== id);
-          _editingDate = null;
+          _editingSlot = null;
           reRenderGrid(viewEl);
           Toast.show('Meal cleared', 'success');
         } catch (err) {
@@ -281,24 +307,25 @@ const MealPlanView = (() => {
 
       const form = e.target;
       const dateStr = form.dataset.date;
+      const mealType = form.dataset.mealType;
       const mealName = form.querySelector('.mealplan-input-name').value.trim();
       const notes = form.querySelector('.mealplan-input-notes').value.trim();
 
       if (!mealName) return;
 
-      const existing = _entries.find(entry => entry.date === dateStr);
+      const existing = _entries.find(e => e.date === dateStr && e.meal_type === mealType);
 
       try {
         let saved;
         if (existing) {
           saved = await API.mealplan.update(existing.id, { meal_name: mealName, notes });
-          const idx = _entries.findIndex(entry => entry.id === existing.id);
+          const idx = _entries.findIndex(e => e.id === existing.id);
           if (idx !== -1) _entries[idx] = saved;
         } else {
-          saved = await API.mealplan.create({ date: dateStr, meal_name: mealName, notes });
+          saved = await API.mealplan.create({ date: dateStr, meal_type: mealType, meal_name: mealName, notes });
           _entries.push(saved);
         }
-        _editingDate = null;
+        _editingSlot = null;
         reRenderGrid(viewEl);
         Toast.show('Meal saved', 'success');
       } catch (err) {
@@ -319,7 +346,7 @@ const MealPlanView = (() => {
 
     try {
       _entries = await API.mealplan.list(toISO(_weekMonday));
-      _editingDate = null;
+      _editingSlot = null;
       reRenderGrid(viewEl);
     } catch (err) {
       Toast.show('Failed to load meal plan: ' + err.message, 'error');
@@ -331,7 +358,7 @@ const MealPlanView = (() => {
   async function render(container) {
     _weekMonday = getMondayOf(new Date());
     _entries = [];
-    _editingDate = null;
+    _editingSlot = null;
     _pantryItems = [];
 
     container.innerHTML = `
@@ -366,7 +393,7 @@ const MealPlanView = (() => {
         API.mealplan.list(toISO(_weekMonday)),
         API.items.list(),
       ]);
-      _editingDate = null;
+      _editingSlot = null;
       reRenderGrid(viewEl);
       renderPantrySnapshot(viewEl);
     } catch (err) {

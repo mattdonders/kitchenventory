@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from .database import engine, Base
+from .migrate import migrate
 from .seed import seed_data
 from .routers import items, categories, locations, shopping, recipes, mealplan
 
@@ -12,6 +13,7 @@ from .routers import items, categories, locations, shopping, recipes, mealplan
 async def lifespan(app: FastAPI):
     # Startup: create tables and seed data
     Base.metadata.create_all(bind=engine)
+    migrate()
     seed_data()
     yield
     # Shutdown (nothing to clean up for SQLite)

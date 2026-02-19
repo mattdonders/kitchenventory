@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Date, Boolean
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Date, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
@@ -61,8 +61,11 @@ class ShoppingListItem(Base):
 class MealPlanEntry(Base):
     __tablename__ = "meal_plan_entries"
 
+    __table_args__ = (UniqueConstraint('date', 'meal_type', name='uq_meal_plan_date_type'),)
+
     id = Column(Integer, primary_key=True, index=True)
-    date = Column(Date, unique=True, nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)
+    meal_type = Column(String, nullable=False, default='dinner')
     meal_name = Column(String, nullable=False)
     notes = Column(String, default="")
     recipe_id = Column(Integer, nullable=True)  # future-proofing, unused in Phase 1

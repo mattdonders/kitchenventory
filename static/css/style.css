@@ -1661,7 +1661,7 @@ a {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 12px 14px;
   box-shadow: var(--shadow);
   position: relative;
   transition: box-shadow 0.15s;
@@ -1671,21 +1671,13 @@ a {
   border-left: 4px solid var(--color-primary);
 }
 
-.mealplan-day-card.is-empty {
-  border-style: dashed;
-  background: transparent;
-  box-shadow: none;
-}
-
-.mealplan-day-card.is-empty:hover {
-  background: var(--color-surface);
-}
-
 .mealplan-day-header {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .mealplan-day-name {
@@ -1704,6 +1696,34 @@ a {
 
 .mealplan-day-card.is-today .mealplan-day-name {
   color: var(--color-primary);
+}
+
+/* Meal slots within each day card */
+.mealplan-meal-slot {
+  padding: 8px 0 6px;
+}
+
+.mealplan-meal-slot + .mealplan-meal-slot {
+  border-top: 1px solid var(--color-border);
+}
+
+.mealplan-meal-slot-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.mealplan-meal-slot.is-editing {
+  background: var(--color-surface-alt);
+  margin: 0 -14px;
+  padding: 8px 14px 6px;
+  border-radius: var(--radius-sm);
 }
 
 /* Filled day content */
@@ -1750,8 +1770,8 @@ a {
 
 /* Empty day add button */
 .mealplan-btn-add {
-  font-size: 0.875rem;
-  padding: 6px 14px;
+  font-size: 0.8rem;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
   border: 1px dashed var(--color-border);
   background: transparent;
