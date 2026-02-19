@@ -4,6 +4,11 @@
 const SettingsView = (() => {
   const APP_VERSION = '1.6.0';
   const LS_THEME = 'kv_theme';
+  const LS_BREAKFAST_SLOTS = 'kv_breakfast_slots';
+
+  function getBreakfastSlots() {
+    return parseInt(localStorage.getItem(LS_BREAKFAST_SLOTS) || '1');
+  }
 
   const CHANGELOG = [
     {
@@ -121,6 +126,18 @@ const SettingsView = (() => {
         </div>
 
         <div class="settings-section">
+          <div class="section-title">Meal Planner</div>
+          <div class="settings-row">
+            <span class="settings-row-label">Breakfast Slots</span>
+            <div class="mode-toggle">
+              <button type="button" class="mode-btn ${getBreakfastSlots() === 1 ? 'active' : ''}" data-breakfast-slots="1">1</button>
+              <button type="button" class="mode-btn ${getBreakfastSlots() === 2 ? 'active' : ''}" data-breakfast-slots="2">2</button>
+              <button type="button" class="mode-btn ${getBreakfastSlots() === 3 ? 'active' : ''}" data-breakfast-slots="3">3</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
           <div class="section-title">Appearance</div>
           <div class="settings-row">
             <span class="settings-row-label">Theme</span>
@@ -139,6 +156,15 @@ const SettingsView = (() => {
       </div>
     `;
 
+    container.querySelectorAll('[data-breakfast-slots]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        localStorage.setItem(LS_BREAKFAST_SLOTS, btn.dataset.breakfastSlots);
+        container.querySelectorAll('[data-breakfast-slots]').forEach(b =>
+          b.classList.toggle('active', b.dataset.breakfastSlots === btn.dataset.breakfastSlots)
+        );
+      });
+    });
+
     container.querySelectorAll('[data-theme]').forEach(btn => {
       btn.addEventListener('click', () => {
         applyTheme(btn.dataset.theme);
@@ -149,5 +175,5 @@ const SettingsView = (() => {
     });
   }
 
-  return { render, applyTheme, getTheme, APP_VERSION };
+  return { render, applyTheme, getTheme, getBreakfastSlots, APP_VERSION };
 })();

@@ -8,12 +8,20 @@ const MealPlanView = (() => {
   let _editingSlot = null;    // { date: "YYYY-MM-DD", meal_type: "breakfast"|"lunch"|"dinner" } or null
   let _pantryItems = [];      // ItemOut[] — loaded once per view render
 
-  // Meal type config
-  const MEAL_TYPES = [
-    { key: 'breakfast', label: 'Breakfast', icon: 'fa-mug-hot' },
-    { key: 'lunch',     label: 'Lunch',     icon: 'fa-sun' },
-    { key: 'dinner',    label: 'Dinner',    icon: 'fa-moon' },
-  ];
+  // Meal type config — breakfast count driven by Settings
+  function getMealTypes() {
+    const slots = SettingsView.getBreakfastSlots();
+    const breakfasts = Array.from({ length: slots }, (_, i) => ({
+      key:   i === 0 ? 'breakfast' : `breakfast_${i + 1}`,
+      label: i === 0 ? 'Breakfast' : `Breakfast ${i + 1}`,
+      icon:  'fa-mug-hot',
+    }));
+    return [
+      ...breakfasts,
+      { key: 'lunch',   label: 'Lunch',   icon: 'fa-sun' },
+      { key: 'dinner',  label: 'Dinner',  icon: 'fa-moon' },
+    ];
+  }
 
   // ---- Date helpers ----
 
@@ -130,7 +138,7 @@ const MealPlanView = (() => {
     let cardClasses = 'mealplan-day-card';
     if (isToday) cardClasses += ' is-today';
 
-    const slotsHtml = MEAL_TYPES.map(mt => renderMealSlot(iso, mt)).join('');
+    const slotsHtml = getMealTypes().map(mt => renderMealSlot(iso, mt)).join('');
 
     return `
       <div class="${cardClasses}" data-date="${iso}">
