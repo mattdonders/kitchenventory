@@ -1194,6 +1194,159 @@ a {
   color: var(--color-text);
 }
 
+/* Settings card — multi-element block (breakfast slots, location list) */
+.settings-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+}
+
+.settings-card-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+.settings-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Breakfast slot name inputs */
+.settings-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.settings-name-input {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.settings-name-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Location rows */
+.settings-location-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.settings-location-row + .settings-location-row {
+  border-top: 1px solid var(--color-border);
+}
+
+.settings-location-name {
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.settings-location-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Add row (location form) */
+.settings-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-add-input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.settings-add-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Settings buttons */
+.settings-btn-primary {
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.settings-btn-primary:hover { opacity: 0.88; }
+
+.settings-btn-secondary {
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.settings-btn-secondary:hover { background: var(--color-border); }
+
+.settings-btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.settings-btn-icon:hover { background: var(--color-border); }
+
+.settings-btn-icon.is-danger:hover {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+.settings-empty-msg {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
 .changelog-entry {
   background: var(--color-surface);
   border: 1px solid var(--color-border);

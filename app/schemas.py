@@ -161,6 +161,14 @@ class AppSettingUpdate(BaseModel):
     value: str
 
 
+class LocationCreate(BaseModel):
+    name: str
+
+
+class LocationUpdate(BaseModel):
+    name: str
+
+
 class ParseUrlRequest(BaseModel):
     url: str
 

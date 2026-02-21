@@ -47,7 +47,10 @@ const API = (() => {
 
   // Locations
   const locations = {
-    list: () => request('GET', '/locations'),
+    list:   ()          => request('GET',    '/locations'),
+    create: (data)      => request('POST',   '/locations', data),
+    update: (id, data)  => request('PUT',    `/locations/${id}`, data),
+    delete: (id)        => request('DELETE', `/locations/${id}`),
   };
 
   // Shopping

@@ -10,16 +10,28 @@ const MealPlanView = (() => {
 
   // Meal type config — breakfast count driven by Settings
   function getMealTypes() {
-    const slots = parseInt(App.state.settings?.breakfast_slots || '1');
-    const breakfasts = Array.from({ length: slots }, (_, i) => ({
-      key:   i === 0 ? 'breakfast' : `breakfast_${i + 1}`,
-      label: i === 0 ? 'Breakfast' : `Breakfast ${i + 1}`,
-      icon:  'fa-mug-hot',
-    }));
+    const raw = App.state.settings?.breakfast_slots || '';
+    let names;
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        names = parsed;
+      } else {
+        throw new Error();
+      }
+    } catch {
+      // Legacy integer format ("1", "2") or empty
+      const count = parseInt(raw) || 1;
+      names = Array.from({ length: count }, (_, i) => i === 0 ? 'Breakfast' : `Breakfast ${i + 1}`);
+    }
     return [
-      ...breakfasts,
-      { key: 'lunch',   label: 'Lunch',   icon: 'fa-sun' },
-      { key: 'dinner',  label: 'Dinner',  icon: 'fa-moon' },
+      ...names.map((name, i) => ({
+        key:   i === 0 ? 'breakfast' : `breakfast_${i + 1}`,
+        label: name,
+        icon:  'fa-mug-hot',
+      })),
+      { key: 'lunch',  label: 'Lunch',  icon: 'fa-sun' },
+      { key: 'dinner', label: 'Dinner', icon: 'fa-moon' },
     ];
   }
 
