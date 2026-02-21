@@ -96,25 +96,28 @@ const SettingsView = (() => {
     document.documentElement.setAttribute('data-theme', useDark ? 'dark' : 'light');
   }
 
-  // --- Breakfast names ---
+  // --- Slot name helpers (shared by breakfast + lunch) ---
 
-  function getBreakfastNames() {
-    const raw = App.state.settings?.breakfast_slots || '';
+  function parseSlotNames(raw, defaultLabel) {
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     } catch {}
-    // Legacy integer format ("1", "2") or empty
     const count = parseInt(raw) || 1;
-    return Array.from({ length: count }, (_, i) => i === 0 ? 'Breakfast' : `Breakfast ${i + 1}`);
+    return Array.from({ length: count }, (_, i) =>
+      i === 0 ? defaultLabel : `${defaultLabel} ${i + 1}`
+    );
   }
 
-  function renderBreakfastInputs(names) {
+  function getBreakfastNames() { return parseSlotNames(App.state.settings?.breakfast_slots || '', 'Breakfast'); }
+  function getLunchNames()     { return parseSlotNames(App.state.settings?.lunch_slots     || '', 'Lunch'); }
+
+  function renderSlotInputs(names, key) {
     return names.map((name, i) => `
       <div class="settings-name-row">
         <input type="text" class="settings-name-input" value="${escapeHtml(name)}" placeholder="Slot label" />
         ${names.length > 1
-          ? `<button type="button" class="settings-btn-icon is-danger" data-action="remove-breakfast-slot" data-index="${i}" title="Remove">
+          ? `<button type="button" class="settings-btn-icon is-danger" data-action="remove-slot" data-key="${key}" data-index="${i}" title="Remove">
                <i class="fa-solid fa-xmark"></i>
              </button>`
           : ''}
@@ -122,19 +125,19 @@ const SettingsView = (() => {
     `).join('');
   }
 
-  function renderBreakfastActions(count) {
+  function renderSlotActions(key, count) {
     return `
       ${count < 3
-        ? `<button type="button" class="settings-btn-secondary" data-action="add-breakfast-slot">
+        ? `<button type="button" class="settings-btn-secondary" data-action="add-slot" data-key="${key}">
              <i class="fa-solid fa-plus"></i> Add slot
            </button>`
         : ''}
-      <button type="button" class="settings-btn-primary" data-action="save-breakfast-names">Save</button>
+      <button type="button" class="settings-btn-primary" data-action="save-slot" data-key="${key}">Save</button>
     `;
   }
 
-  function getNamesFromInputs(container) {
-    return Array.from(container.querySelectorAll('#breakfast-name-inputs .settings-name-input'))
+  function getSlotNamesFromInputs(container, key) {
+    return Array.from(container.querySelectorAll(`#${key}-name-inputs .settings-name-input`))
       .map(i => i.value);
   }
 
@@ -164,6 +167,7 @@ const SettingsView = (() => {
   async function render(container) {
     const currentTheme = getTheme();
     const breakfastNames = getBreakfastNames();
+    const lunchNames     = getLunchNames();
 
     try { _locations = await API.locations.list(); } catch { _locations = []; }
 
@@ -194,9 +198,16 @@ const SettingsView = (() => {
           <div class="section-title">Meal Planner</div>
           <div class="settings-card">
             <div class="settings-card-label">Breakfast Slots</div>
-            <div id="breakfast-name-inputs">${renderBreakfastInputs(breakfastNames)}</div>
-            <div class="settings-card-actions" id="breakfast-actions">
-              ${renderBreakfastActions(breakfastNames.length)}
+            <div id="breakfast_slots-name-inputs">${renderSlotInputs(breakfastNames, 'breakfast_slots')}</div>
+            <div class="settings-card-actions" id="breakfast_slots-actions">
+              ${renderSlotActions('breakfast_slots', breakfastNames.length)}
+            </div>
+          </div>
+          <div class="settings-card">
+            <div class="settings-card-label">Lunch Slots</div>
+            <div id="lunch_slots-name-inputs">${renderSlotInputs(lunchNames, 'lunch_slots')}</div>
+            <div class="settings-card-actions" id="lunch_slots-actions">
+              ${renderSlotActions('lunch_slots', lunchNames.length)}
             </div>
           </div>
         </div>
@@ -244,37 +255,40 @@ const SettingsView = (() => {
       if (!btn) return;
       const action = btn.dataset.action;
 
-      // ---- Breakfast slots ----
+      // ---- Slot editors (breakfast_slots, lunch_slots) ----
 
-      if (action === 'add-breakfast-slot') {
-        const inputsEl = container.querySelector('#breakfast-name-inputs');
-        const names = getNamesFromInputs(container);
+      if (action === 'add-slot') {
+        const key = btn.dataset.key;
+        const inputsEl = container.querySelector(`#${key}-name-inputs`);
+        const names = getSlotNamesFromInputs(container, key);
         if (names.length >= 3) return;
         names.push('');
-        inputsEl.innerHTML = renderBreakfastInputs(names);
-        container.querySelector('#breakfast-actions').innerHTML = renderBreakfastActions(names.length);
+        inputsEl.innerHTML = renderSlotInputs(names, key);
+        container.querySelector(`#${key}-actions`).innerHTML = renderSlotActions(key, names.length);
         const inputs = inputsEl.querySelectorAll('.settings-name-input');
         inputs[inputs.length - 1]?.focus();
         return;
       }
 
-      if (action === 'remove-breakfast-slot') {
+      if (action === 'remove-slot') {
+        const key = btn.dataset.key;
         const idx = parseInt(btn.dataset.index);
-        const inputsEl = container.querySelector('#breakfast-name-inputs');
-        const names = getNamesFromInputs(container);
+        const inputsEl = container.querySelector(`#${key}-name-inputs`);
+        const names = getSlotNamesFromInputs(container, key);
         names.splice(idx, 1);
-        const newNames = names.length ? names : ['Breakfast'];
-        inputsEl.innerHTML = renderBreakfastInputs(newNames);
-        container.querySelector('#breakfast-actions').innerHTML = renderBreakfastActions(newNames.length);
+        const newNames = names.length ? names : [''];
+        inputsEl.innerHTML = renderSlotInputs(newNames, key);
+        container.querySelector(`#${key}-actions`).innerHTML = renderSlotActions(key, newNames.length);
         return;
       }
 
-      if (action === 'save-breakfast-names') {
-        let names = getNamesFromInputs(container).map(n => n.trim()).filter(Boolean);
-        if (!names.length) names = ['Breakfast'];
+      if (action === 'save-slot') {
+        const key = btn.dataset.key;
+        let names = getSlotNamesFromInputs(container, key).map(n => n.trim()).filter(Boolean);
+        if (!names.length) names = [key === 'lunch_slots' ? 'Lunch' : 'Breakfast'];
         try {
-          App.state.settings = await API.settings.update('breakfast_slots', JSON.stringify(names));
-          container.querySelector('#breakfast-actions').innerHTML = renderBreakfastActions(names.length);
+          App.state.settings = await API.settings.update(key, JSON.stringify(names));
+          container.querySelector(`#${key}-actions`).innerHTML = renderSlotActions(key, names.length);
           Toast.show('Saved', 'success');
         } catch {
           Toast.show('Failed to save', 'error');

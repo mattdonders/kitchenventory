@@ -8,30 +8,26 @@ const MealPlanView = (() => {
   let _editingSlot = null;    // { date: "YYYY-MM-DD", meal_type: "breakfast"|"lunch"|"dinner" } or null
   let _pantryItems = [];      // ItemOut[] — loaded once per view render
 
-  // Meal type config — breakfast count driven by Settings
-  function getMealTypes() {
-    const raw = App.state.settings?.breakfast_slots || '';
-    let names;
+  // Parse a slot setting (JSON array or legacy integer) into an array of label strings
+  function parseSlotNames(raw, defaultLabel) {
     try {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        names = parsed;
-      } else {
-        throw new Error();
-      }
-    } catch {
-      // Legacy integer format ("1", "2") or empty
-      const count = parseInt(raw) || 1;
-      names = Array.from({ length: count }, (_, i) => i === 0 ? 'Breakfast' : `Breakfast ${i + 1}`);
-    }
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {}
+    const count = parseInt(raw) || 1;
+    return Array.from({ length: count }, (_, i) =>
+      i === 0 ? defaultLabel : `${defaultLabel} ${i + 1}`
+    );
+  }
+
+  // Meal type config — driven by Settings (breakfast_slots, lunch_slots)
+  function getMealTypes() {
+    const bNames = parseSlotNames(App.state.settings?.breakfast_slots || '', 'Breakfast');
+    const lNames = parseSlotNames(App.state.settings?.lunch_slots     || '', 'Lunch');
     return [
-      ...names.map((name, i) => ({
-        key:   i === 0 ? 'breakfast' : `breakfast_${i + 1}`,
-        label: name,
-        icon:  'fa-mug-hot',
-      })),
-      { key: 'lunch',  label: 'Lunch',  icon: 'fa-sun' },
-      { key: 'dinner', label: 'Dinner', icon: 'fa-moon' },
+      ...bNames.map((name, i) => ({ key: i === 0 ? 'breakfast' : `breakfast_${i + 1}`, label: name, icon: 'fa-mug-hot', group: 'breakfast' })),
+      ...lNames.map((name, i) => ({ key: i === 0 ? 'lunch'     : `lunch_${i + 1}`,     label: name, icon: 'fa-sun',     group: 'lunch'     })),
+      { key: 'dinner', label: 'Dinner', icon: 'fa-moon', group: 'dinner' },
     ];
   }
 
@@ -151,11 +147,13 @@ const MealPlanView = (() => {
     if (isToday) cardClasses += ' is-today';
 
     const mealTypes = getMealTypes();
-    const breakfastSlots = mealTypes.filter(mt => mt.key.startsWith('breakfast'));
-    const otherSlots     = mealTypes.filter(mt => !mt.key.startsWith('breakfast'));
+    // Group breakfast and lunch slots; dinner is always a single standalone slot
+    const grouped = ['breakfast', 'lunch'];
+    const groups = grouped.map(g => mealTypes.filter(mt => mt.group === g));
+    const dinner = mealTypes.filter(mt => mt.group === 'dinner');
     const slotsHtml =
-      `<div class="mealplan-breakfast-group">${breakfastSlots.map(mt => renderMealSlot(iso, mt)).join('')}</div>` +
-      otherSlots.map(mt => renderMealSlot(iso, mt)).join('');
+      groups.map(g => `<div class="mealplan-slot-group">${g.map(mt => renderMealSlot(iso, mt)).join('')}</div>`).join('') +
+      dinner.map(mt => renderMealSlot(iso, mt)).join('');
 
     return `
       <div class="${cardClasses}" data-date="${iso}">

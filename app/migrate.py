@@ -27,6 +27,7 @@ def _create_settings_table(conn):
     """))
     # Seed defaults — INSERT OR IGNORE so existing values are never overwritten
     conn.execute(text("INSERT OR IGNORE INTO app_settings (key, value) VALUES ('breakfast_slots', '1')"))
+    conn.execute(text("INSERT OR IGNORE INTO app_settings (key, value) VALUES ('lunch_slots', '1')"))
 
 
 def _add_meal_type_column(conn):

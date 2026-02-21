@@ -1860,8 +1860,9 @@ a {
   border-top: 1px solid var(--color-border);
 }
 
-/* Breakfast group — transparent wrapper; separator before lunch on mobile */
-.mealplan-breakfast-group + .mealplan-meal-slot {
+/* Slot groups — transparent wrappers; separators on mobile */
+.mealplan-slot-group + .mealplan-meal-slot,
+.mealplan-slot-group + .mealplan-slot-group {
   border-top: 1px solid var(--color-border);
 }
 
@@ -2137,13 +2138,15 @@ a {
     border-left: 1px solid var(--color-border);
   }
 
-  /* Breakfast group occupies the breakfast column; stacked slots use border-top */
-  .mealplan-breakfast-group + .mealplan-meal-slot {
+  /* Each slot group occupies one grid column; next group/slot gets a left border */
+  .mealplan-slot-group + .mealplan-meal-slot,
+  .mealplan-slot-group + .mealplan-slot-group {
     border-top: none;
     border-left: 1px solid var(--color-border);
   }
 
-  .mealplan-breakfast-group .mealplan-meal-slot + .mealplan-meal-slot {
+  /* Stacked slots within a group use top borders */
+  .mealplan-slot-group .mealplan-meal-slot + .mealplan-meal-slot {
     border-top: 1px solid var(--color-border);
     border-left: none;
   }
