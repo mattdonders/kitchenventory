@@ -20,10 +20,13 @@ const MealPlanView = (() => {
     );
   }
 
-  // Meal type config — driven by Settings (breakfast_slots, lunch_slots)
-  function getMealTypes() {
+  // Meal type config — driven by Settings (breakfast_slots, lunch_slots_weekday/weekend)
+  function getMealTypes(iso) {
+    const date = parseISODate(iso);
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const lunchKey = isWeekend ? 'lunch_slots_weekend' : 'lunch_slots_weekday';
     const bNames = parseSlotNames(App.state.settings?.breakfast_slots || '', 'Breakfast');
-    const lNames = parseSlotNames(App.state.settings?.lunch_slots     || '', 'Lunch');
+    const lNames = parseSlotNames(App.state.settings?.[lunchKey]      || '', 'Lunch');
     return [
       ...bNames.map((name, i) => ({ key: i === 0 ? 'breakfast' : `breakfast_${i + 1}`, label: name, icon: 'fa-mug-hot', group: 'breakfast' })),
       ...lNames.map((name, i) => ({ key: i === 0 ? 'lunch'     : `lunch_${i + 1}`,     label: name, icon: 'fa-sun',     group: 'lunch'     })),
@@ -146,7 +149,7 @@ const MealPlanView = (() => {
     let cardClasses = 'mealplan-day-card';
     if (isToday) cardClasses += ' is-today';
 
-    const mealTypes = getMealTypes();
+    const mealTypes = getMealTypes(iso);
     // Group breakfast and lunch slots; dinner is always a single standalone slot
     const grouped = ['breakfast', 'lunch'];
     const groups = grouped.map(g => mealTypes.filter(mt => mt.group === g));

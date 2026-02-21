@@ -27,7 +27,14 @@ def _create_settings_table(conn):
     """))
     # Seed defaults — INSERT OR IGNORE so existing values are never overwritten
     conn.execute(text("INSERT OR IGNORE INTO app_settings (key, value) VALUES ('breakfast_slots', '1')"))
-    conn.execute(text("INSERT OR IGNORE INTO app_settings (key, value) VALUES ('lunch_slots', '1')"))
+    # Migrate old lunch_slots key → lunch_slots_weekday (copy value if present)
+    conn.execute(text("""
+        INSERT OR IGNORE INTO app_settings (key, value)
+        SELECT 'lunch_slots_weekday', value FROM app_settings WHERE key = 'lunch_slots'
+    """))
+    # Seed weekday default if still missing (no old key either)
+    conn.execute(text("INSERT OR IGNORE INTO app_settings (key, value) VALUES ('lunch_slots_weekday', '1')"))
+    conn.execute(text("INSERT OR IGNORE INTO app_settings (key, value) VALUES ('lunch_slots_weekend', '1')"))
 
 
 def _add_meal_type_column(conn):

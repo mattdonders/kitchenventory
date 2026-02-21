@@ -109,8 +109,9 @@ const SettingsView = (() => {
     );
   }
 
-  function getBreakfastNames() { return parseSlotNames(App.state.settings?.breakfast_slots || '', 'Breakfast'); }
-  function getLunchNames()     { return parseSlotNames(App.state.settings?.lunch_slots     || '', 'Lunch'); }
+  function getBreakfastNames()    { return parseSlotNames(App.state.settings?.breakfast_slots    || '', 'Breakfast'); }
+  function getLunchWeekdayNames() { return parseSlotNames(App.state.settings?.lunch_slots_weekday || '', 'Lunch'); }
+  function getLunchWeekendNames() { return parseSlotNames(App.state.settings?.lunch_slots_weekend || '', 'Lunch'); }
 
   function renderSlotInputs(names, key) {
     return names.map((name, i) => `
@@ -166,8 +167,9 @@ const SettingsView = (() => {
 
   async function render(container) {
     const currentTheme = getTheme();
-    const breakfastNames = getBreakfastNames();
-    const lunchNames     = getLunchNames();
+    const breakfastNames    = getBreakfastNames();
+    const lunchWeekdayNames = getLunchWeekdayNames();
+    const lunchWeekendNames = getLunchWeekendNames();
 
     try { _locations = await API.locations.list(); } catch { _locations = []; }
 
@@ -204,10 +206,17 @@ const SettingsView = (() => {
             </div>
           </div>
           <div class="settings-card">
-            <div class="settings-card-label">Lunch Slots</div>
-            <div id="lunch_slots-name-inputs">${renderSlotInputs(lunchNames, 'lunch_slots')}</div>
-            <div class="settings-card-actions" id="lunch_slots-actions">
-              ${renderSlotActions('lunch_slots', lunchNames.length)}
+            <div class="settings-card-label">Lunch Slots — Weekdays</div>
+            <div id="lunch_slots_weekday-name-inputs">${renderSlotInputs(lunchWeekdayNames, 'lunch_slots_weekday')}</div>
+            <div class="settings-card-actions" id="lunch_slots_weekday-actions">
+              ${renderSlotActions('lunch_slots_weekday', lunchWeekdayNames.length)}
+            </div>
+          </div>
+          <div class="settings-card">
+            <div class="settings-card-label">Lunch Slots — Weekends</div>
+            <div id="lunch_slots_weekend-name-inputs">${renderSlotInputs(lunchWeekendNames, 'lunch_slots_weekend')}</div>
+            <div class="settings-card-actions" id="lunch_slots_weekend-actions">
+              ${renderSlotActions('lunch_slots_weekend', lunchWeekendNames.length)}
             </div>
           </div>
         </div>
@@ -285,7 +294,7 @@ const SettingsView = (() => {
       if (action === 'save-slot') {
         const key = btn.dataset.key;
         let names = getSlotNamesFromInputs(container, key).map(n => n.trim()).filter(Boolean);
-        if (!names.length) names = [key === 'lunch_slots' ? 'Lunch' : 'Breakfast'];
+        if (!names.length) names = [key.startsWith('lunch') ? 'Lunch' : 'Breakfast'];
         try {
           App.state.settings = await API.settings.update(key, JSON.stringify(names));
           container.querySelector(`#${key}-actions`).innerHTML = renderSlotActions(key, names.length);
